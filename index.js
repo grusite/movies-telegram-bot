@@ -1,108 +1,52 @@
-const TelegramBot = require('node-telegram-bot-api')
-const axios = require('axios')
+import TelegramBot from "node-telegram-bot-api";
+import translate from 'translate'
+import { extractMovieInfo, getImdbInfo, formatRatingNumber } from './utils.js'
 
-// replace with your Telegram token and IMDb API key
-const token = '6433264597:AAGfjlOkBsovl2EEiFwupg8gemMkhpPDDSw'
-const rapidAPIKey = '08e8713494msh7bfae9ef06af2e0p129ff7jsn6d025c3487a9'
-const rapidAPIHost = 'moviesdatabase.p.rapidapi.com'
+const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true })
 
-// Create a bot that uses 'polling' to fetch new updates
-const bot = new TelegramBot(token, { polling: true })
+bot.on('message', async (msg) => {
+    console.log("Original message: ", msg);
+    // Check if the message is from 'Overseer' bot
+    // if (msg.from.is_bot && msg.from.first_name === 'Overseer') {}
+    const movieInfo = extractMovieInfo(msg.text);
+    console.log("Extracted movie info: ", movieInfo);
+    if (movieInfo) {
+      try {
+        // Fetch IMDb rating
+        const imdbInfo = await getImdbInfo(movieInfo.title, movieInfo.year)
 
-bot.on('message', (msg) => {
-  // Check if the message is from 'Overseer' bot
-  console.log(msg.from);
-  console.log(msg);
-//   if (msg.from.is_bot && msg.from.first_name === 'Overseer') {
-    const { title, year } = extractMovieInfo(msg.text)
-    if (title && year) {
-      // Fetch IMDb rating
-      getImdbRating(title, year)
-        .then((res) => {
-          console.log("DENTRO", res);
-          if (res && Object.keys(res).length > 0) {
-            console.log('RATING', res.rating)
-            console.log('VOTOS', res.numVotes)
-            // Send the rating to the chat
-            bot.sendMessage(
-              msg.chat.id,
-              `<strong>IMDb rating</strong> for <strong>${title}: ${
-                res.rating
-              }/10</strong> <em>(${formatRatingNumber(res.numVotes)} votes)</em>`,
-              { parse_mode: 'HTML' }
-            )
-          }
-        })
-        .catch((_error) => {
-          bot.sendMessage(msg.chat.id, `Error fetching rating for ${title}`)
-        })
-    }
-//   }
-})
+        if (imdbInfo && Object.keys(imdbInfo).length > 0) {
+          const translatedPlot = movieInfo.plot.length > imdbInfo.plot?.original.length ? await translate(movieInfo.plot, {
+            from: 'en',
+            to: 'es',
+            engine: 'google',
+          }) : imdbInfo.plot?.translated;
+           
+          // Construct the caption
+          let caption = `<strong>Nueva ${imdbInfo.type?.translated}: ${imdbInfo.title} - ${imdbInfo.year}</strong>\n`
+          caption += `${translatedPlot}\n\n`
+          caption += `<strong>Pedido por: </strong>${movieInfo.requestedBy}\n`
+          caption += `<strong>Estado: </strong>${await translate(movieInfo.requestStatus, {
+            from: 'en',
+            to: 'es',
+            engine: 'google',
+          })}\n`
+          caption += `<strong>Rating:</strong>\n`
+          caption += `    - <strong>IMDB</strong>: <strong>${
+              imdbInfo.rating?.total
+          }/10</strong> <em>(${formatRatingNumber(imdbInfo.rating?.numVotes)} votos)</em>\n\n`
+          caption += `<a href="${msg.entities?.[3]?.url ?? '#'}">Ver media en Overseer</a>\n`
+          caption += `<a href="https://www.imdb.com/title/${imdbInfo.id}">Ver media en IMDB</a>\n`
 
-
-function extractMovieInfo(messageText) {
-  const regex = /^(.+) Request Now Available - (.+) \((\d{4})\)/
-  const match = messageText.match(regex);
-  console.log('match: ', match)
-  if (match && match[2] && match[3]) {
-    return {
-      title: match[2].trim(),
-      year: match[3],
-    }
-  } else {
-    return null
-  }
-}
-
-async function getImdbRating(title, year) {
-  console.log("MovieInfo: ", title, year);
-  const options = {
-    method: 'GET',
-    headers: {
-      'X-RapidAPI-Key': rapidAPIKey,
-      'X-RapidAPI-Host': rapidAPIHost,
-    },
-  }
-
-  try {
-    const res = await axios.request({
-      ...options,
-      url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(title)}`,
-      params: { exact: 'true' },
-    })
-    console.log("Search Result", res.data)
-    if (res.data && res.data.entries > 0 && res.data.results.length > 0) {
-      res.data.results.map((movie) => {
-        console.log('Movie Year', movie.releaseYear.year, year);
-      })
-      const correctMovie = res.data.results.filter((movie) => movie.releaseYear.year === +year);
-      console.log("correctMovie", correctMovie);
-      if (correctMovie && correctMovie.length > 0) {
-        const res = await axios.request({
-          ...options,
-          url: `https://moviesdatabase.p.rapidapi.com/titles/${correctMovie[0].id}/ratings`,
-        })
-        console.log("rating!", res.data)
-        return {
-          rating: res.data.results.averageRating,
-          numVotes: res.data.results.numVotes,
+          // Send the photo with the caption to the chat
+          bot.sendPhoto(msg.chat.id, imdbInfo.coverImageUrl, {
+            caption,
+            parse_mode: 'HTML',
+          })
         }
+      } catch(error) {
+        bot.sendMessage(msg.chat.id, `Error fetching rating for ${title}`)
+        console.error(error);
       }
     }
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-function formatRatingNumber(number) {
-  if (number >= 1000000) {
-    return (number / 1000000).toFixed(1) + ' M'
-  } else if (number >= 10000) {
-    return Math.round(number / 1000) + ' mil'
-  } else if (number >= 1000) {
-    return (number / 1000).toFixed(1) + ' mil'
-  } else {
-    return number.toString()
-  }
-}
+})
