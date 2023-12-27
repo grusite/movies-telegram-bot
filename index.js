@@ -15,10 +15,12 @@ bot.on('message', async (msg) => {
         const imdbInfo = await getImdbInfo(movieInfo.title, movieInfo.year);
         const tmdbInfo = await getTmdbInfo(movieInfo.title, movieInfo.year, movieInfo.type === 'Movie');
 
-        if (imdbInfo && tmdbInfo) {
+        if (tmdbInfo) {
           /* Movie info (title+desc) */
           let caption = `<strong>Nueva ${tmdbInfo.type} - ${tmdbInfo.title?.translated} (${movieInfo.year})</strong>\n`
-          caption += `<strong>(${imdbInfo.type} - ${tmdbInfo.title?.original} (${movieInfo.year}))</strong>\n`
+          caption += `<strong>(${imdbInfo?.type || tmdbInfo.type} - ${tmdbInfo.title?.original} (${
+            movieInfo.year
+          }))</strong>\n`
           caption += `<strong>[${tmdbInfo.genres.join(", ")}]</strong>\n`
           caption += `\n`
           caption += `<strong>${tmdbInfo.title?.tagline}</strong>\n`
@@ -40,9 +42,10 @@ bot.on('message', async (msg) => {
 
           /* Ratings */
           caption += `<strong>Rating:</strong>\n`
-          caption += `    - <strong>IMDB</strong>: <strong>${
-            imdbInfo.rating?.total
-          }/10</strong> <em>(${formatRatingNumber(imdbInfo.rating?.numVotes)} votos)</em>\n`
+          if (imdbInfo)
+            caption += `    - <strong>IMDB</strong>: <strong>${
+              imdbInfo?.rating?.total
+            }/10</strong> <em>(${formatRatingNumber(imdbInfo?.rating?.numVotes)} votos)</em>\n`
           caption += `    - <strong>TMDB</strong>: <strong>${
             tmdbInfo.rating?.total
           }/10</strong> <em>(${formatRatingNumber(tmdbInfo.rating?.numVotes)} votos)</em>\n`
@@ -52,7 +55,8 @@ bot.on('message', async (msg) => {
           caption += `<a href="${
             msg.entities?.[3]?.url || msg.entities?.[4]?.url
           }">Ver media en Overseer</a>\n`
-          caption += `<a href="https://www.imdb.com/title/${imdbInfo.id}">Ver media en IMDB</a>\n`
+          if (imdbInfo)
+            caption += `<a href="https://www.imdb.com/title/${imdbInfo?.id}">Ver media en IMDB</a>\n`
           caption += `<a href="https://www.themoviedb.org/${
             movieInfo.type === 'Movie' ? 'movie' : 'tv'
           }/${tmdbInfo.id}">Ver media en TMDB</a>\n`

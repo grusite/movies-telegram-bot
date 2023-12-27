@@ -31,6 +31,8 @@ export function extractMovieInfo(messageText) {
  * @returns {string} A formatted string representing the number in a more readable form.
  */
 export function formatRatingNumber(number) {
+  if(!number) return;
+  
   if (number >= 1000000) {
     return (number / 1000000).toFixed(1) + ' M'
   } else if (number >= 10000) {
