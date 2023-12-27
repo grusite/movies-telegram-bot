@@ -8,7 +8,7 @@ import axios from "axios";
  */
 export function extractMovieInfo(messageText) {
   const regex = /^(.+) Request Now Available - (.+) \((\d{4})\)\n([\s\S]+?)\n\nRequested By: (.+)\nRequest Status: (.+)(?:\nRequested Seasons: (.+))?/m;
-  const match = messageText.match(regex);
+  const match = messageText?.match(regex);
   if (match) {
     return {
       type: match[1].trim(),

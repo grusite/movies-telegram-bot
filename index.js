@@ -5,8 +5,12 @@ const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true })
 
 bot.on('message', async (msg) => {
     console.log("Original message: ", msg);
-    // Check if the message is from 'Overseer' bot
-    // if (msg.from.is_bot && msg.from.first_name === 'Overseer') {}
+    
+    if(!msg.text || typeof msg.text !== 'string') {
+        console.log("Invalid message: ", msg);
+        return;
+    };
+
     const movieInfo = extractMovieInfo(msg.text);
     console.log("Extracted movie info: ", movieInfo);
     if (movieInfo) {
