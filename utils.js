@@ -32,7 +32,7 @@ export function extractMovieInfo(messageText) {
  */
 export function formatRatingNumber(number) {
   if(!number) return;
-  
+
   if (number >= 1000000) {
     return (number / 1000000).toFixed(1) + ' M'
   } else if (number >= 10000) {
@@ -62,12 +62,24 @@ export async function getImdbInfo(title, year) {
   }
 
   try {
-    const res = await axios.request({
+    let res = await axios.request({
       ...options,
       url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(title)}`,
       params: { exact: 'true', info: 'base_info' },
     })
     console.log('IMDd title search result', res.data)
+
+    // If the title is not found in IMDb, split the title into two parts and try again
+    if(res.data && res.data.entries === 0){
+      res = await axios.request({
+        ...options,
+        url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(
+          title.split(' ').slice(0, 2).join(' ')
+        )}`,
+        params: { exact: 'true', info: 'base_info' },
+      })
+      console.log('IMDd new title search result', res.data)
+    }
 
     if (res.data && res.data.entries > 0 && res.data.results.length > 0) {
       const filteredByYear = res.data.results.filter((m) => m.releaseYear?.year === +year)[0]

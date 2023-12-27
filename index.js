@@ -44,11 +44,11 @@ bot.on('message', async (msg) => {
           caption += `<strong>Rating:</strong>\n`
           if (imdbInfo)
             caption += `    - <strong>IMDB</strong>: <strong>${
-              imdbInfo?.rating?.total
-            }/10</strong> <em>(${formatRatingNumber(imdbInfo?.rating?.numVotes)} votos)</em>\n`
+              imdbInfo?.rating?.total ?? 0
+            }/10</strong> <em>(${formatRatingNumber(imdbInfo?.rating?.numVotes) ?? 0} votos)</em>\n`
           caption += `    - <strong>TMDB</strong>: <strong>${
-            tmdbInfo.rating?.total
-          }/10</strong> <em>(${formatRatingNumber(tmdbInfo.rating?.numVotes)} votos)</em>\n`
+            tmdbInfo.rating?.total ?? 0
+          }/10</strong> <em>(${formatRatingNumber(tmdbInfo.rating?.numVotes) ?? 0} votos)</em>\n`
           caption += `\n`
 
           /* Important links */
