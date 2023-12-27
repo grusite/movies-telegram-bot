@@ -22,7 +22,7 @@ bot.on('message', async (msg) => {
           caption += `<strong>[${tmdbInfo.genres.join(", ")}]</strong>\n`
           caption += `\n`
           caption += `<strong>${tmdbInfo.title?.tagline}</strong>\n`
-          caption += `${tmdbInfo.plot}\n`
+          caption += `${tmdbInfo.plot.length > 600 ? tmdbInfo.plot.slice(0, 600)+'...' : tmdbInfo.plot}\n`
           caption += `\n`
 
           /* Requested info */
@@ -58,10 +58,18 @@ bot.on('message', async (msg) => {
           }/${tmdbInfo.id}">Ver media en TMDB</a>\n`
 
           // Send the photo with the caption to the chat
-          bot.sendPhoto(msg.chat.id, tmdbInfo.coverImageUrl, {
-            caption,
-            parse_mode: 'HTML',
-          })
+          bot
+            .sendPhoto(msg.chat.id, tmdbInfo.coverImageUrl, {
+              caption,
+              parse_mode: 'HTML',
+            })
+            .then(() => {
+              // Then delete the original message
+              bot.deleteMessage(msg.chat.id, msg.message_id)
+            })
+            .catch((error) => {
+              console.error(error.message)
+            });
         }
       } catch(error) {
         bot.sendMessage(msg.chat.id, `Error fetching rating for ${movieInfo.title}`)
@@ -75,6 +83,6 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 })
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+process.on('unhandledRejection', (reason, _promise) => {
+  console.error('Unhandled Rejection:', reason.message);
 })

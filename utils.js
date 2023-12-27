@@ -63,21 +63,27 @@ export async function getImdbInfo(title, year) {
     const res = await axios.request({
       ...options,
       url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(title)}`,
-      params: { exact: 'true', info: 'base_info', year },
+      params: { exact: 'true', info: 'base_info' },
     })
     console.log('IMDd title search result', res.data)
 
     if (res.data && res.data.entries > 0 && res.data.results.length > 0) {
-      const imdbMovie = res.data.results[0];
+      const filteredByYear = res.data.results.filter((m) => m.releaseYear?.year === +year)[0]
+
+      const imdbMovie =
+        res.data.entries > 1
+          ? filteredByYear || res.data.results[0]
+          : res.data.results[0]
+
       return {
         id: imdbMovie.id,
-        title: imdbMovie.originalTitleText.text,
-        type: imdbMovie.titleType.text,
-        coverImageUrl: imdbMovie.primaryImage.url,
-        plot: imdbMovie.plot.plotText.plainText,
+        title: imdbMovie.originalTitleText?.text,
+        type: imdbMovie.titleType?.text,
+        coverImageUrl: imdbMovie.primaryImage?.url,
+        plot: imdbMovie.plot?.plotText?.plainText,
         rating: {
-          total: imdbMovie.ratingsSummary.aggregateRating,
-          numVotes: imdbMovie.ratingsSummary.voteCount,
+          total: imdbMovie.ratingsSummary?.aggregateRating,
+          numVotes: imdbMovie.ratingsSummary?.voteCount,
         },
       }
     }
