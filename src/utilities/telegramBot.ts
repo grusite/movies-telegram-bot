@@ -1,5 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
-import { extractMovieInfo, getImdbInfo, getTmdbInfo, formatRatingNumber } from './'
+import { extractMovieInfo, getImdbInfo, getTmdbInfo, formatRatingNumber } from './index.js'
 
 export async function readAndSendMessage(bot: TelegramBot, msg: TelegramBot.Message) {
   console.log('Original message: ', msg)

@@ -1,5 +1,5 @@
 import TelegramBot from "node-telegram-bot-api"
-import { readAndSendMessage } from "./utilities/telegramBot"
+import { readAndSendMessage } from "./utilities/telegramBot.js"
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
 
