@@ -1,19 +1,35 @@
 import express from 'express'
 import TelegramBot from 'node-telegram-bot-api'
-import { readAndSendMessage } from './utilities/telegramBot.js'
-
-const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
-// bot.on('message', async (msg) => readAndSendMessage(bot, msg))
+import { OverseerrPayload, readAndSendMessage, sendMessageFromOverseerrWebhook } from './utils/telegramBot.js'
 
 const app = express();
 const port = process.env.PORT || 3000
 
 app.use(express.json());
 
-app.post('/webhook', (req, res) => {
-  const body = req.body;
+app.post('/webhook', async (req, res) => {
+  const body: OverseerrPayload = req.body
   console.log('Received webhook from Overseer: ', body);
-  res.sendStatus(200);
+
+  try{
+    await sendMessageFromOverseerrWebhook(process.env.TELEGRAM_CHAT_ID!, body)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Telegram message not sent',
+      chatId: process.env.TELEGRAM_CHAT_ID,
+      title: body.subject,
+      notificationType: body.notification_type,
+      error,
+    })
+  }
+
+  res.status(200).json({
+    message: 'Telegram message successfully sent',
+    chatId: process.env.TELEGRAM_CHAT_ID,
+    title: body.subject,
+    notificationType: body.notification_type,
+    error: null,
+  })
 });
 
 app.listen(port, () => {

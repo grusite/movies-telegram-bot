@@ -5,7 +5,7 @@ export type IMDbTitleSearchResponse = {
   results: IMDbMedia[]
 }
 
-type IMDbMedia = {
+export type IMDbMedia = {
   _id: string
   id: string
   ratingsSummary: RatingsSummary

@@ -151,3 +151,14 @@ interface Season {
   season_number: number
   vote_average: number
 }
+
+export function isTMDBMovie(media: unknown): media is TMDbMovieDetailResponse {
+  return (
+    (media as TMDbMovieDetailResponse).title !== undefined &&
+    (media as TMDbMovieDetailResponse).original_title !== undefined
+  )
+}
+
+export function isTMDBSeries(media: unknown): media is TMDbSeriesDetailResponse {
+  return (media as TMDbSeriesDetailResponse).name !== undefined && (media as TMDbSeriesDetailResponse).original_name!== undefined
+}
