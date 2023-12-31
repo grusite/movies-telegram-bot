@@ -1,4 +1,6 @@
 import axios from "axios";
+import type { IMDbTitleSearchResponse } from "src/types/imdb";
+import type { TMDbMediaSearchResponse, TMDbMovieDetailResponse, TMDbSeriesDetailResponse } from 'src/types/tmdb'
 
 /**
  * Extracts detailed movie or series information from a message text.
@@ -6,7 +8,7 @@ import axios from "axios";
  * @param {string} messageText - The text of the message containing detailed movie or series information.
  * @returns {Object|null} An object containing the type, title, year, plot, requested by user, request status, and optionally requested seasons of the series, or null if the information cannot be extracted.
  */
-export function extractMovieInfo(messageText) {
+export function extractMovieInfo(messageText: string) {
   const regex = /^(.+) Request Now Available - (.+) \((\d{4})\)\n([\s\S]+?)\n\nRequested By: (.+)\nRequest Status: (.+)(?:\nRequested Seasons: (.+))?/m;
   const match = messageText?.match(regex);
   if (match) {
@@ -19,9 +21,8 @@ export function extractMovieInfo(messageText) {
       requestStatus: match[6].trim(),
       requestedSeasons: match[7] ? match[7].trim() : undefined,
     };
-  } else {
-    return null;
-  }
+  } 
+  return null;
 }
 
 /**
@@ -30,7 +31,7 @@ export function extractMovieInfo(messageText) {
  * @param {number} number - The number to format.
  * @returns {string} A formatted string representing the number in a more readable form.
  */
-export function formatRatingNumber(number) {
+export function formatRatingNumber(number: number) {
   if(!number) return;
 
   if (number >= 1000000) {
@@ -51,7 +52,7 @@ export function formatRatingNumber(number) {
  * @param {string} year - The release year of the movie.
  * @returns {Promise<Object>} A promise that resolves to an object containing detailed information about the movie, including title, year, type, cover image URL, plot, and rating details (total rating and number of votes). If no data is found, it returns an object with null values for rating and number of votes.
  */
-export async function getImdbInfo(title, year) {
+export async function getImdbInfo(title: string, year: number) {
   console.log(`MovieInfo: Title - ${title}, Year - ${year}`)
   const options = {
     method: 'GET',
@@ -62,7 +63,7 @@ export async function getImdbInfo(title, year) {
   }
 
   try {
-    let res = await axios.request({
+    let res = await axios.request<IMDbTitleSearchResponse>({
       ...options,
       url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(title)}`,
       params: { exact: 'true', info: 'base_info' },
@@ -71,7 +72,7 @@ export async function getImdbInfo(title, year) {
 
     // If the title is not found in IMDb, split the title into two parts and try again
     if(res.data && res.data.entries === 0){
-      res = await axios.request({
+      res = await axios.request<IMDbTitleSearchResponse>({
         ...options,
         url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(
           title.split(' ').slice(0, 2).join(' ')
@@ -117,25 +118,27 @@ export async function getImdbInfo(title, year) {
  * @param {boolean} isMovie - Indicates if the title is a movie (true) or series (false).
  * @returns {Promise<Object>} A promise that resolves to an object containing the title, genres, type, seriesInfo, cover image URL, plot, and rating from TMDb.
  */
-export async function getTmdbInfo(title, year, isMovie = true) {
+export async function getTmdbInfo(title: string, year: number, isMovie = true) {
   console.log(`TMDB MovieInfo: Title - ${title}, Year - ${year}, isMovie - ${isMovie}`);
   const apiKey = process.env.TMDB_API_KEY;
   const url = `https://api.themoviedb.org/3/search/${isMovie ? 'movie' : 'tv'}?api_key=${apiKey}&language=es-ES&query=${encodeURIComponent(title)}&year=${year}`;
 
   try {
-    const response = await axios.get(url);
+    const response = await axios.get<TMDbMediaSearchResponse>(url)
     const results = response.data.results;
     console.log('TMDb results', results);
     // Filter results to match the provided year as well.
     const media = results.find(
       (m) =>
-        (isMovie ? m.original_title : m.original_name).toLowerCase() === title.toLowerCase() &&
-        (isMovie ? m.release_date : m.first_air_date).startsWith(year.toString())
+        (isMovie ? m.original_title! : m.original_name!).toLowerCase() === title.toLowerCase() &&
+        (isMovie ? m.release_date! : m.first_air_date!).startsWith(year.toString())
     )
 
     if (media) {
       const detailsUrl = `https://api.themoviedb.org/3/${isMovie ? 'movie' : 'tv'}/${media.id}?api_key=${apiKey}&language=es-ES`;
-      const detailsResponse = await axios.get(detailsUrl);
+      const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
+        detailsUrl
+      )
       console.log('TMDb details', detailsResponse.data);
 
       return {
@@ -147,12 +150,12 @@ export async function getTmdbInfo(title, year, isMovie = true) {
         },
         genres: detailsResponse.data.genres.map((g) => g.name),
         type: isMovie ? 'Película' : 'Serie',
-        numberOfEpisodes: isMovie ? undefined : detailsResponse.data.number_of_episodes,
-        numberOfSeasons: isMovie ? undefined : detailsResponse.data.number_of_seasons,
+        numberOfEpisodes: isMovie ? undefined : (detailsResponse.data as TMDbSeriesDetailResponse).number_of_episodes,
+        numberOfSeasons: isMovie ? undefined : (detailsResponse.data as TMDbSeriesDetailResponse).number_of_seasons,
         coverImageUrl: `https://image.tmdb.org/t/p/original${media.poster_path}`,
         plot: media.overview,
         rating: {
-          total: media.vote_average,
+          total: Math.round(media.vote_average * 10) / 10,
           numVotes: media.vote_count,
         },
       }
