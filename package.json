@@ -10,7 +10,7 @@
     "dev-proto": "node  --import tsx --env-file=.env --watch --trace-warnings src/utilities/mtProtoBot.ts",
     "start": "node --env-file=.env dist/index.js",
     "start-proto": "node --env-file=.env dist/mProtoBot.js",
-    "build": "tsc",
+    "build": "npm install && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jorge Martin",
