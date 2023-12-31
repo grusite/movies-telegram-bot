@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "node --import tsx --env-file=.env --watch src/index.ts",
     "start": "node --env-file=.env dist/index.js",
+    "start-ci": "node dist/index.js",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
