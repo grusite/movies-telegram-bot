@@ -13,7 +13,7 @@
     "types": [ "node" ],
     "baseUrl": "./",
   },
-  "exclude": [ "node_modules", "dist", "src/mtProtoBot.ts" ],
+  "exclude": [ "node_modules", "dist" ],
   "include": [
     "src/**/*.ts",
   ]
