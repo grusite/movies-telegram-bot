@@ -13,6 +13,14 @@ app.post('/webhook', async (req, res) => {
 
   try{
     await sendMessageFromOverseerrWebhook(process.env.TELEGRAM_CHAT_ID!, body)
+
+    res.status(200).json({
+      message: 'Telegram message successfully sent',
+      chatId: process.env.TELEGRAM_CHAT_ID,
+      title: body.subject,
+      notificationType: body.notification_type,
+      error: null,
+    })
   } catch (error) {
     res.status(500).json({
       message: 'Telegram message not sent',
@@ -22,14 +30,6 @@ app.post('/webhook', async (req, res) => {
       error,
     })
   }
-
-  res.status(200).json({
-    message: 'Telegram message successfully sent',
-    chatId: process.env.TELEGRAM_CHAT_ID,
-    title: body.subject,
-    notificationType: body.notification_type,
-    error: null,
-  })
 });
 
 app.listen(port, () => {

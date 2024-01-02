@@ -95,14 +95,15 @@ export async function readAndSendMessage(msg: TelegramBot.Message) {
 }
 
 export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrPayload: OverseerrPayload) {
-  const { notification_type, event, subject, message, image, media, request } = overseerrPayload;
+  const { notification_type, event, subject, message, image, media, request, extra } = overseerrPayload;
 
   const isMovie = media.media_type === 'movie';
-  console.log(isMovie);
   const mediaInfo = extractMediaInfoFromOverseerWebhook(subject)
   console.log('Extracted media info: ', mediaInfo)
 
   try {
+    if(!mediaInfo && !isMovie) throw new Error(`No media info found for the TV serie: ${subject}`)
+
     // Fetch IMDb and TMDb data for the movie
     const tmdbInfo = await getTMDBInfoById(+media.tmdbId, isMovie);
     const imdbInfo = isMovie ? await getIMDBInfoById(tmdbInfo.imdbId) : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year);
@@ -125,10 +126,10 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       /* Requested info */
       caption += `<strong>Pedido por: </strong>${request.requestedBy_username}\n`
       caption += `<strong>Estado:</strong> ${
-        media.status === 'AVAILABLE' ? 'Disponible' : 'N/A'
+        notification_type === 'MEDIA_AVAILABLE' ? 'Disponible' : notification_type
       }\n`
-      if (!isMovie) {
-        caption += `<strong>Temporada/s descargada/s: </strong>${'?'}\n`
+      if (!isMovie && tmdbInfo.numberOfEpisodes && tmdbInfo.numberOfSeasons) {
+        // caption += `<strong>Temporada/s descargada/s: </strong>${'?'}\n`
         caption += `<strong>Número de episodios: </strong>${tmdbInfo.numberOfEpisodes}\n`
         caption += `<strong>Número de temporadas: </strong>${tmdbInfo.numberOfSeasons}\n`
       }
@@ -136,18 +137,18 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
 
       /* Ratings */
       caption += `<strong>Rating:</strong>\n`
-      if (imdbInfo)
+      if (imdbInfo && imdbInfo.rating?.total && imdbInfo.rating?.numVotes)
         caption += `    - <strong>IMDB</strong>: <strong>${
-          imdbInfo?.rating?.total ?? 0
-        }/10</strong> <em>(${formatRatingNumber(imdbInfo?.rating?.numVotes) ?? 0} votos)</em>\n`
+          imdbInfo.rating.total
+        }/10</strong> <em>(${formatRatingNumber(imdbInfo.rating.numVotes)} votos)</em>\n`
       caption += `    - <strong>TMDB</strong>: <strong>${
         tmdbInfo.rating?.total ?? 0
       }/10</strong> <em>(${formatRatingNumber(tmdbInfo.rating?.numVotes) ?? 0} votos)</em>\n`
       caption += `\n`
 
       /* Important links */
-      if (imdbInfo)
-        caption += `<a href="https://www.imdb.com/title/${imdbInfo?.id}">Ver media en IMDB</a>\n`
+      if (imdbInfo && imdbInfo.id)
+        caption += `<a href="https://www.imdb.com/title/${imdbInfo.id}">Ver media en IMDB</a>\n`
       caption += `<a href="https://www.themoviedb.org/${media.media_type}/${media.tmdbId}">Ver media en TMDB</a>\n`
 
       // Send the photo with the caption to the chat
@@ -160,20 +161,23 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
           console.error(error.message)
         })
     }
-  } catch (error) {
-    bot.sendMessage(chatId, `Error fetching rating for ${mediaInfo!.title}`);
-    console.error(error);
+  } catch (err) {
+    const error = err as Error;
+    bot.sendMessage(chatId, `Error fetching rating for ${subject}`);
+    console.error(error.message);
+    throw error.message;
   }
 }
 
 export interface OverseerrPayload {
-  notification_type: string
+  notification_type: 'MEDIA_PENDING' | 'MEDIA_AVAILABLE' | 'ISSUE_COMMENT' // There are more unknown types
   event: string
   subject: string
   message: string
   image: string
   media: Media
   request: Request
+  extra: unknown[]
 }
 
 export interface Media {
@@ -190,3 +194,52 @@ export interface Request {
   requestedBy_username: string
   requestedBy_avatar: string
 }
+
+// Ejecmplos de Overseerr payloads
+
+/* Series:
+
+Received webhook from Overseer:  {
+  "notification_type": "MEDIA_AVAILABLE",
+  "event": "Series Request Now Available",
+  "subject": "The Mentalist (2008)",
+  "message": "Patrick Jane, a former celebrity psychic medium, uses his razor sharp skills of observation and expertise at \"reading\" people to solve serious crimes with the California Bureau of Investigation.",
+  "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/acYXu4KaDj1NIkMgObnhe4C4a0T.jpg",
+  "media": {
+    "media_type": "tv",
+    "tmdbId": "5920",
+    "tvdbId": "82459",
+    "status": "PARTIALLY_AVAILABLE",
+    "status4k": "UNKNOWN"
+  },
+  "request": {
+    "request_id": "145",
+    "requestedBy_email": "grusite@gmail.com",
+    "requestedBy_username": "grusite",
+    "requestedBy_avatar": "https://plex.tv/users/fe7fa4e4122d2d86/avatar?c=1703683943"
+  }
+}
+*/
+
+/* Pelis
+
+Received webhook from Overseer: {
+  "notification_type": "MEDIA_AVAILABLE",
+  "event": "Movie Request Now Available",
+  "subject": "Dungeons & Dragons: Honor Among Thieves (2023)",
+  "message": "A charming thief and a band of unlikely adventurers undertake an epic heist to retrieve a lost relic, but things go dangerously awry when they run afoul of the wrong people.",
+  "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/A7AoNT06aRAc4SV89Dwxj3EYAgC.jpg",
+  "media": {
+    "media_type": "movie",
+    "tmdbId": "493529",
+    "tvdbId": "",
+    "status": "AVAILABLE",
+    "status4k": "UNKNOWN"
+  },
+  "request": {
+    "request_id": "141",
+    "requestedBy_email": "drinconada@gmail.com",
+    "requestedBy_username": "Gudnight",
+    "requestedBy_avatar": "https://plex.tv/users/45eb1bbd0c2fb9b5/avatar?c=1703945653"
+  }
+*/
