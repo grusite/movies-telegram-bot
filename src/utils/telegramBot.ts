@@ -97,12 +97,12 @@ export async function readAndSendMessage(msg: TelegramBot.Message) {
 export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrPayload: OverseerrPayload) {
   const { notification_type, event, subject, message, image, media, request, extra } = overseerrPayload;
 
-  const isMovie = media.media_type === 'movie';
+  const isMovie = media?.media_type === 'movie';
   const mediaInfo = extractMediaInfoFromOverseerWebhook(subject)
   console.log('Extracted media info: ', mediaInfo)
 
   try {
-    if(!mediaInfo && !isMovie) throw new Error(`No media info found for the TV serie: ${subject}`)
+    if(!media || (!mediaInfo && !isMovie)) throw new Error(`No media info found for: ${subject}`)
 
     // Fetch IMDb and TMDb data for the movie
     const tmdbInfo = await getTMDBInfoById(+media.tmdbId, isMovie);
@@ -124,12 +124,19 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       caption += `\n`
 
       /* Requested info */
-      caption += `<strong>Pedido por: </strong>${request.requestedBy_username}\n`
+      if(request) {
+        caption += `<strong>Pedido por: </strong><a href="${request.requestedBy_avatar}">${request.requestedBy_username}</a>\n`
+      }
       caption += `<strong>Estado:</strong> ${
         notification_type === 'MEDIA_AVAILABLE' ? 'Disponible' : notification_type
       }\n`
-      if (!isMovie && tmdbInfo.numberOfEpisodes && tmdbInfo.numberOfSeasons) {
-        // caption += `<strong>Temporada/s descargada/s: </strong>${'?'}\n`
+      if (
+        !isMovie &&
+        tmdbInfo.numberOfEpisodes &&
+        tmdbInfo.numberOfSeasons &&
+        extra[0].name === 'Requested Seasons'
+      ) {
+        caption += `<strong>Temporada/s descargada/s: </strong>${+extra[0].value!}\n`
         caption += `<strong>Número de episodios: </strong>${tmdbInfo.numberOfEpisodes}\n`
         caption += `<strong>Número de temporadas: </strong>${tmdbInfo.numberOfSeasons}\n`
       }
@@ -137,18 +144,20 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
 
       /* Ratings */
       caption += `<strong>Rating:</strong>\n`
-      if (imdbInfo && imdbInfo.rating?.total && imdbInfo.rating?.numVotes)
+      if (imdbInfo && imdbInfo.rating?.total && imdbInfo.rating?.numVotes) {
         caption += `    - <strong>IMDB</strong>: <strong>${
           imdbInfo.rating.total
         }/10</strong> <em>(${formatRatingNumber(imdbInfo.rating.numVotes)} votos)</em>\n`
+      }
       caption += `    - <strong>TMDB</strong>: <strong>${
         tmdbInfo.rating?.total ?? 0
       }/10</strong> <em>(${formatRatingNumber(tmdbInfo.rating?.numVotes) ?? 0} votos)</em>\n`
       caption += `\n`
 
       /* Important links */
-      if (imdbInfo && imdbInfo.id)
+      if (imdbInfo && imdbInfo.id) {
         caption += `<a href="https://www.imdb.com/title/${imdbInfo.id}">Ver media en IMDB</a>\n`
+      }
       caption += `<a href="https://www.themoviedb.org/${media.media_type}/${media.tmdbId}">Ver media en TMDB</a>\n`
 
       // Send the photo with the caption to the chat
@@ -163,7 +172,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     }
   } catch (err) {
     const error = err as Error;
-    bot.sendMessage(chatId, `Error fetching rating for ${subject}`);
+    bot.sendMessage(chatId, `Ups! Siento deciros que ha habido un error al intentar procesar la información de: ${subject}`);
     console.error(error.message);
     throw error.message;
   }
@@ -175,9 +184,11 @@ export interface OverseerrPayload {
   subject: string
   message: string
   image: string
-  media: Media
-  request: Request
-  extra: unknown[]
+  media: Media | null
+  request: Request | null
+  issue: Issue | null
+  comment: IssueComment | null
+  extra: Extra[]
 }
 
 export interface Media {
@@ -193,6 +204,25 @@ export interface Request {
   requestedBy_email: string
   requestedBy_username: string
   requestedBy_avatar: string
+}
+
+export interface Issue {
+  issue_id: string
+  reportedBy_username: string
+  reportedBy_email: string
+  reportedBy_avatar: string
+}
+
+export interface IssueComment {
+  comment_message: string
+  commentedBy_username: string
+  commentedBy_email: string
+  commentedBy_avatar: string
+}
+
+export interface Extra {
+  name?: string
+  value?: string
 }
 
 // Ejecmplos de Overseerr payloads
@@ -217,7 +247,10 @@ Received webhook from Overseer:  {
     "requestedBy_email": "grusite@gmail.com",
     "requestedBy_username": "grusite",
     "requestedBy_avatar": "https://plex.tv/users/fe7fa4e4122d2d86/avatar?c=1703683943"
-  }
+  },
+  "issue": null,
+  "comment": null,
+  "extra": [ { "name": "Requested Seasons", "value": "1" } ]
 }
 */
 
@@ -241,5 +274,8 @@ Received webhook from Overseer: {
     "requestedBy_email": "drinconada@gmail.com",
     "requestedBy_username": "Gudnight",
     "requestedBy_avatar": "https://plex.tv/users/45eb1bbd0c2fb9b5/avatar?c=1703945653"
-  }
+  },
+  "issue": null,
+  "comment": null,
+  "extra": []
 */
