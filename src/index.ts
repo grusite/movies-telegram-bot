@@ -39,6 +39,13 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
+app.post('/webhook/transcoding', async (req, res) => {
+  const body = req.body
+  console.log('Received webhook from Tautulli: ', body)
+
+  res.status(200).send('OK')
+})
+
 app.listen(port, () => {
   console.log(`Server is running on ${port}`)
 })
