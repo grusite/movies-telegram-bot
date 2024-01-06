@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type { IMDbMedia, IMDbTitleSearchResponse } from '../types/IMDB'
+import { logger } from './logger'
 
 /**
  * Fetches detailed IMDb information for a given movie title and year.
@@ -22,7 +23,7 @@ export async function getIMDBInfoById(id: string) {
       url: `https://moviesdatabase.p.rapidapi.com/titles/${id}`,
       params: { info: 'base_info' },
     })
-    console.log('IMDd id search result', res.data)
+    logger.info('IMDd id search result', res.data)
 
     if (res.data?.results && Object.keys(res.data.results).length > 0) {
       const imdbMovie = res.data.results as unknown as IMDbMedia;
@@ -42,7 +43,7 @@ export async function getIMDBInfoById(id: string) {
     }
     return null
   } catch (error) {
-    console.error('Error fetching data from IMDb:', error)
+    logger.error('Error fetching data from IMDb:', error)
     throw error
   }
 }
@@ -55,7 +56,7 @@ export async function getIMDBInfoById(id: string) {
  * @returns {Promise<Object>} A promise that resolves to an object containing detailed information about the movie, including title, year, type, cover image URL, plot, and rating details (total rating and number of votes). If no data is found, it returns an object with null values for rating and number of votes.
  */
 export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
-  console.log(`MovieInfo: Title - ${title}, Year - ${year}`)
+  logger.info(`MovieInfo: Title - ${title}, Year - ${year}`)
   const options = {
     method: 'GET',
     headers: {
@@ -70,7 +71,7 @@ export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
       url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(title)}`,
       params: { exact: 'true', info: 'base_info' },
     })
-    console.log('IMDd title search result', res.data)
+    logger.info('IMDd title search result', res.data)
 
     // If the title is not found in IMDb, split the title into two parts and try again
     if (res.data && res.data.entries === 0) {
@@ -81,7 +82,7 @@ export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
         )}`,
         params: { exact: 'true', info: 'base_info' },
       })
-      console.log('IMDd new title search result', res.data)
+      logger.info('IMDd new title search result', res.data)
     }
 
     if (res.data && res.data.entries > 0 && res.data.results.length > 0) {
@@ -105,7 +106,7 @@ export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
     }
     return null
   } catch (error) {
-    console.error('Error fetching data from IMDb:', error)
+    logger.error('Error fetching data from IMDb:', error)
     throw error
   }
 }

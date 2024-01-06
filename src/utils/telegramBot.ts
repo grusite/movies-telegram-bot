@@ -2,20 +2,21 @@ import TelegramBot from "node-telegram-bot-api";
 import { getIMDBInfoById, getIMDBInfoByTitleAndYear } from './IMDB.js'
 import { getTMDBInfoById, getTMDBInfoByTitleAndYear} from './TMDB.js'
 import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook } from './index.js'
+import { logger } from "./logger.js";
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
 // bot.on('message', async (msg) => readAndSendMessage(msg))
 
 export async function readAndSendMessage(msg: TelegramBot.Message) {
-  console.log('Original message: ', msg)
+  logger.overseerrMedia('Original message: ', msg)
 
   if (!msg.text || typeof msg.text !== 'string') {
-    console.log('Invalid message: ', msg)
+    logger.overseerrMedia('Invalid message: ', msg)
     return
   }
 
   const mediaInfo = extractMediaInfoFromOverseerBot(msg.text)
-  console.log('Extracted movie info: ', mediaInfo)
+  logger.overseerrMedia('Extracted movie info: ', mediaInfo)
   if (mediaInfo) {
     try {
       // Fetch IMDb and TMDb data for the movie
@@ -84,12 +85,13 @@ export async function readAndSendMessage(msg: TelegramBot.Message) {
             bot.deleteMessage(msg.chat.id, msg.message_id)
           })
           .catch((error) => {
-            console.error(error.message)
+            logger.error(error.message)
           })
       }
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       bot.sendMessage(msg.chat.id, `Error fetching rating for ${mediaInfo.title}`)
-      console.error(error)
+      logger.error(error.message)
     }
   }
 }
@@ -99,7 +101,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
 
   const isMovie = media?.media_type === 'movie';
   const mediaInfo = extractMediaInfoFromOverseerWebhook(subject)
-  console.log('Extracted media info: ', mediaInfo)
+  logger.overseerrMedia('Extracted media info: ', mediaInfo)
 
   try {
     if(!media || (!mediaInfo && !isMovie)) throw new Error(`No media info found for: ${subject}`)
@@ -107,7 +109,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     // Fetch IMDb and TMDb data for the movie
     const tmdbInfo = await getTMDBInfoById(+media.tmdbId, isMovie);
     const imdbInfo = isMovie ? await getIMDBInfoById(tmdbInfo.imdbId) : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year);
-    console.log("imdbInfo: ", imdbInfo)
+    logger.overseerrMedia("imdbInfo: ", imdbInfo)
 
     if (tmdbInfo) {
       /* Movie info (title+desc) */
@@ -167,13 +169,13 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
           parse_mode: 'HTML',
         })
         .catch((error) => {
-          console.error(error.message)
+          logger.error(error.message)
         })
     }
   } catch (err) {
     const error = err as Error;
     bot.sendMessage(chatId, `Ups! Siento deciros que ha habido un error al intentar procesar la información de: ${subject}`);
-    console.error(error.message);
+    logger.error(error.message);
     throw error.message;
   }
 }

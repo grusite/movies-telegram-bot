@@ -1,5 +1,6 @@
 import express from 'express'
 import { OverseerrPayload, sendMessageFromOverseerrWebhook } from './utils/telegramBot.js'
+import { logger } from './utils/logger.js';
 
 const app = express();
 const port = process.env.PORT || 3000
@@ -11,14 +12,14 @@ app.get('/', (_req, res) => {
 })
 
 app.get('/health', (_req, res) => {
-  res.status(200).send('OK');
+  res.status(200).send('Monstruooo! Que todo ha ido bien ❤️')
 })
 
-app.post('/webhook', async (req, res) => {
+app.post('/webhook/overseerr-media-notification', async (req, res) => {
   const body: OverseerrPayload = req.body
-  console.log('Received webhook from Overseer: ', body);
+  logger.overseerrMedia('Received webhook from Overseer: ', body)
 
-  try{
+  try {
     await sendMessageFromOverseerrWebhook(process.env.TELEGRAM_CHAT_ID!, body)
 
     return res.status(200).json({
@@ -37,24 +38,31 @@ app.post('/webhook', async (req, res) => {
       error,
     })
   }
+})
+
+app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
+  const body = req.body
+  logger.tautulliTranscoding('Received webhook from Tautulli Transcoding Notification: ', body)
+
+  res.status(200).send('OK')
 });
 
-app.post('/webhook/transcoding', async (req, res) => {
+app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
   const body = req.body
-  console.log('Received webhook from Tautulli: ', body)
+  logger.tuautlliLastEpisode('Received webhook from Tautulli Last Episode Notification: ', body)
 
   res.status(200).send('OK')
 })
 
 app.listen(port, () => {
-  console.log(`Server is running on ${port}`)
+  logger.info(`Server is running on ${port}`)
 })
 
 process.on('uncaughtException', (err) => {
-  console.error('There was an uncaught error', err)
+  logger.error('There was an uncaught error', err)
   process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, _promise) => {
-  console.error('Unhandled Rejection:', (reason as Error).message)
+  logger.error('Unhandled Rejection:', (reason as Error).message)
 })

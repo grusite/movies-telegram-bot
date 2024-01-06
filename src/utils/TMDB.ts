@@ -4,6 +4,7 @@ import type {
   TMDbMovieDetailResponse,
   TMDbSeriesDetailResponse,
 } from '../types/TMDB'
+import { logger } from './logger'
 
 /**
  * Fetches detailed information from TMDb API for a given title and year.
@@ -14,7 +15,7 @@ import type {
  * @returns {Promise<Object>} A promise that resolves to an object containing the title, genres, type, seriesInfo, cover image URL, plot, and rating from TMDb.
  */
 export async function getTMDBInfoByTitleAndYear(title: string, year: number, isMovie = true) {
-  console.log(`TMDB MovieInfo: Title - ${title}, Year - ${year}, isMovie - ${isMovie}`)
+  logger.info(`TMDB MovieInfo: Title - ${title}, Year - ${year}, isMovie - ${isMovie}`)
   const apiKey = process.env.TMDB_API_KEY
   const url = `https://api.themoviedb.org/3/search/${
     isMovie ? 'movie' : 'tv'
@@ -23,7 +24,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
   try {
     const response = await axios.get<TMDbMediaSearchResponse>(url)
     const results = response.data.results
-    console.log('TMDb results', results)
+    logger.info('TMDb results', results)
     // Filter results to match the provided year as well.
     const media = results.find(
       (m) =>
@@ -38,7 +39,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
       const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
         detailsUrl
       )
-      console.log('TMDb details', detailsResponse.data)
+      logger.info('TMDb details', detailsResponse.data)
 
       return {
         id: media.id,
@@ -65,7 +66,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
     }
     return null
   } catch (error) {
-    console.error('Error fetching data from TMDb:', error)
+    logger.error('Error fetching data from TMDb:', error)
     throw error
   }
 }
@@ -85,7 +86,7 @@ export async function getTMDBInfoById(id: number, isMovie = true) {
   const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
     detailsUrl
   )
-  console.log('TMDb details', detailsResponse.data)
+  logger.info('TMDb details', detailsResponse.data)
   
   // TS guards to type it correctly
   const mediaDetail = detailsResponse.data as TMDbMovieDetailResponse | TMDbSeriesDetailResponse;
