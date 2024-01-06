@@ -43,7 +43,9 @@ TELEGRAM_TOKEN=<use_your_telegram_bot_token_from_BotFather>
 RAPID_API_KEY=<the_API_key_from: https://rapidapi.com/SAdrian/api/moviesdatabase/>
 RAPID_API_HOST=<moviesdatabase.p.rapidapi.com>
 TMDB_API_KEY=<go_to: https://www.themoviedb.org/talk/5d1e694194d8a849843ba1e3#5d1e694194d8a849843ba1e5 and_take_the_API_KEY>
-TELEGRAM_CHAT_ID=<use_the_telegram_chat_id_to_send_the_message>
+TELEGRAM_MEDIA_CHAT_ID=<use_the_telegram_chat_id_to_send_the_overseerr_message>
+TELEGRAM_TRANSCODING_CHAT_ID=<use_the_telegram_chat_id_to_send_the_transcoding_message>
+TELEGRAM_LAST_EPISODE_CHAT_ID=<use_the_telegram_chat_id_to_send_the_last_episode_message>
 ```
 
 ## Running the bot
@@ -62,10 +64,153 @@ npm start
 
 * **/webhook/overseerr-media-notification:** Handles notifications from Overseerr about new media availability.
 
+Example of a TV Series POST notification from Overseerr:
+
+```json
+{
+  "notification_type": "MEDIA_AVAILABLE",
+  "event": "Series Request Now Available",
+  "subject": "The Mentalist (2008)",
+  "message": "Patrick Jane, a former celebrity psychic medium, uses his razor sharp skills of observation and expertise at \"reading\" people to solve serious crimes with the California Bureau of Investigation.",
+  "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/acYXu4KaDj1NIkMgObnhe4C4a0T.jpg",
+  "media": {
+    "media_type": "tv",
+    "tmdbId": "5920",
+    "tvdbId": "82459",
+    "status": "PARTIALLY_AVAILABLE",
+    "status4k": "UNKNOWN"
+  },
+  "request": {
+    "request_id": "145",
+    "requestedBy_email": "grusite@gmail.com",
+    "requestedBy_username": "grusite",
+    "requestedBy_avatar": "https://plex.tv/users/fe7fa4e4122d2d86/avatar?c=1703683943"
+  },
+  "issue": null,
+  "comment": null,
+  "extra": [ { "name": "Requested Seasons", "value": "1" } ]
+}
+```
+
+Example of a Movie POST notification from Overseerr:
+
+```json
+{
+  "notification_type": "MEDIA_AVAILABLE",
+  "event": "Movie Request Now Available",
+  "subject": "Dungeons & Dragons: Honor Among Thieves (2023)",
+  "message": "A charming thief and a band of unlikely adventurers undertake an epic heist to retrieve a lost relic, but things go dangerously awry when they run afoul of the wrong people.",
+  "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/A7AoNT06aRAc4SV89Dwxj3EYAgC.jpg",
+  "media": {
+    "media_type": "movie",
+    "tmdbId": "493529",
+    "tvdbId": "",
+    "status": "AVAILABLE",
+    "status4k": "UNKNOWN"
+  },
+  "request": {
+    "request_id": "141",
+    "requestedBy_email": "drinconada@gmail.com",
+    "requestedBy_username": "Gudnight",
+    "requestedBy_avatar": "https://plex.tv/users/45eb1bbd0c2fb9b5/avatar?c=1703945653"
+  },
+  "issue": null,
+  "comment": null,
+  "extra": []
+}
+```
+
 * **/webhook/tautulli-transcoding-notification:** Receives notifications from Tautulli about transcoding activities.
+
+Example of a Tautulli Transcoding POST notification:
+```json
+{
+  "title": "Los Juegos del Hambre: Sinsajo - Parte 2",
+  "user": "grusite",
+  "player": "Jorges-MacBook-Pro.local",
+  "action": "play",
+  "media_type": "movie",
+  "serie_info": {
+    "episode_name": "Los Juegos del Hambre: Sinsajo - Parte 2",
+    "episode_num": "0",
+    "episode_count": "1",
+    "season_num": "0",
+    "season_count": "1"
+  },
+  "transcode_info": {
+    "transcode_decision": "Direct Play",
+    "video_decision": "direct play",
+    "audio_decision": "direct play",
+    "container": "mkv",
+    "transcode_container": "",
+    "transcode_video_codec": "",
+    "video_codec": "hevc",
+    "transcode_audio_codec": "",
+    "audio_codec": "truehd",
+    "quality": "77437 kbps"
+  }
+}
+
+{
+  "title": "Rain Man",
+  "user": "Fermolmez",
+  "player": "Feer",
+  "action": "change",
+  "media_type": "movie",
+  "serie_info": {
+    "episode_name": "Rain Man",
+    "episode_num": "0",
+    "episode_count": "1",
+    "season_num": "0",
+    "season_count": "1"
+  },
+  "transcode_info": {
+    "transcode_decision": "Transcode",
+    "video_decision": "transcode",
+    "audio_decision": "transcode",
+    "container": "mkv",
+    "transcode_container": "mkv",
+    "transcode_video_codec": "h264",
+    "video_codec": "hevc",
+    "transcode_audio_codec": "opus",
+    "audio_codec": "ac3",
+    "quality": "7113 kbps"
+  }
+}
+```
+
 
 * **/webhook/tautulli-last-episode-notification:** Alerts when a user watches the last episode of a TV series season from Tautulli.
 
+Example of a Tautulli Last Episode notification:
+```json
+{
+  "title": "Los Simpson - El blues de la Mona Lisa",
+  "user": "grusite",
+  "player": "Jorges-MacBook-Pro.local",
+  "action": "play",
+  "media_type": "episode",
+  "serie_info": {
+    "episode_name": "El blues de la Mona Lisa",
+    "episode_num": "6",
+    "episode_count": "1",
+    "season_num": "1",
+    "season_count": "1"
+  },
+  "transcode_info": {
+    "transcode_decision": "Direct Play",
+    "video_decision": "direct play",
+    "audio_decision": "direct play",
+    "container": "mkv",
+    "transcode_container": "",
+    "transcode_video_codec": "",
+    "video_codec": "h264",
+    "transcode_audio_codec": "",
+    "audio_codec": "eac3",
+    "quality": "8689 kbps"
+  }
+}
+```
 
 ## Contributing
 

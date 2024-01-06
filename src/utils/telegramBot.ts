@@ -3,10 +3,22 @@ import { getIMDBInfoById, getIMDBInfoByTitleAndYear } from './IMDB.js'
 import { getTMDBInfoById, getTMDBInfoByTitleAndYear} from './TMDB.js'
 import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook } from './index.js'
 import { logger } from "./logger.js";
+import type { OverseerrPayload } from "../types/overseerr"
+import type { TautulliNotificationPayload } from '../types/tautulli'
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
 // bot.on('message', async (msg) => readAndSendMessage(msg))
 
+/**
+ * Reads a message and sends a formatted response in a Telegram chat.
+ * 
+ * This function processes a message received from Telegram, extracts media information,
+ * fetches additional data from IMDb and TMDb, and sends a detailed response back to the chat.
+ * It formats the response with movie/series details, ratings, and relevant links.
+ * 
+ * @param {TelegramBot.Message} msg - The message received from Telegram.
+ * @throws Will throw an error if processing or fetching additional information fails.
+ */
 export async function readAndSendMessage(msg: TelegramBot.Message) {
   logger.overseerrMedia('Original message: ', msg)
 
@@ -96,6 +108,16 @@ export async function readAndSendMessage(msg: TelegramBot.Message) {
   }
 }
 
+/**
+ * Sends a message to a specified Telegram chat based on Overseerr webhook data.
+ * 
+ * This function processes Overseerr webhook payload, fetches additional information
+ * from TMDB and IMDB, and sends a formatted message to the specified Telegram chat.
+ * 
+ * @param {string} chatId - The Telegram chat ID where the message will be sent.
+ * @param {OverseerrPayload} overseerrPayload - The payload received from Overseerr webhook.
+ * @throws Will throw an error if processing the information fails.
+ */
 export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrPayload: OverseerrPayload) {
   const { notification_type, event, subject, message, image, media, request, extra } = overseerrPayload;
 
@@ -180,104 +202,6 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
   }
 }
 
-export interface OverseerrPayload {
-  notification_type: 'MEDIA_PENDING' | 'MEDIA_AVAILABLE' | 'ISSUE_COMMENT' // There are more unknown types
-  event: string
-  subject: string
-  message: string
-  image: string
-  media: Media | null
-  request: Request | null
-  issue: Issue | null
-  comment: IssueComment | null
-  extra: Extra[]
-}
+export async function sendTranscodingMessageFromTautulliWebhook(chatId: string, tautulliPayload: TautulliNotificationPayload) {}
 
-export interface Media {
-  media_type: 'movie' | 'tv'
-  tmdbId: string
-  tvdbId: string
-  status: 'UNKNOWN' | 'PENDING' | 'PROCESSING' | 'PARTIALLY_AVAILABLE' | 'AVAILABLE'
-  status4k: 'UNKNOWN' | 'PENDING' | 'PROCESSING' | 'PARTIALLY_AVAILABLE' | 'AVAILABLE'
-}
-
-export interface Request {
-  request_id: string
-  requestedBy_email: string
-  requestedBy_username: string
-  requestedBy_avatar: string
-}
-
-export interface Issue {
-  issue_id: string
-  reportedBy_username: string
-  reportedBy_email: string
-  reportedBy_avatar: string
-}
-
-export interface IssueComment {
-  comment_message: string
-  commentedBy_username: string
-  commentedBy_email: string
-  commentedBy_avatar: string
-}
-
-export interface Extra {
-  name?: string
-  value?: string
-}
-
-// Ejecmplos de Overseerr payloads
-
-/* Series:
-
-Received webhook from Overseer:  {
-  "notification_type": "MEDIA_AVAILABLE",
-  "event": "Series Request Now Available",
-  "subject": "The Mentalist (2008)",
-  "message": "Patrick Jane, a former celebrity psychic medium, uses his razor sharp skills of observation and expertise at \"reading\" people to solve serious crimes with the California Bureau of Investigation.",
-  "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/acYXu4KaDj1NIkMgObnhe4C4a0T.jpg",
-  "media": {
-    "media_type": "tv",
-    "tmdbId": "5920",
-    "tvdbId": "82459",
-    "status": "PARTIALLY_AVAILABLE",
-    "status4k": "UNKNOWN"
-  },
-  "request": {
-    "request_id": "145",
-    "requestedBy_email": "grusite@gmail.com",
-    "requestedBy_username": "grusite",
-    "requestedBy_avatar": "https://plex.tv/users/fe7fa4e4122d2d86/avatar?c=1703683943"
-  },
-  "issue": null,
-  "comment": null,
-  "extra": [ { "name": "Requested Seasons", "value": "1" } ]
-}
-*/
-
-/* Pelis
-
-Received webhook from Overseer: {
-  "notification_type": "MEDIA_AVAILABLE",
-  "event": "Movie Request Now Available",
-  "subject": "Dungeons & Dragons: Honor Among Thieves (2023)",
-  "message": "A charming thief and a band of unlikely adventurers undertake an epic heist to retrieve a lost relic, but things go dangerously awry when they run afoul of the wrong people.",
-  "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/A7AoNT06aRAc4SV89Dwxj3EYAgC.jpg",
-  "media": {
-    "media_type": "movie",
-    "tmdbId": "493529",
-    "tvdbId": "",
-    "status": "AVAILABLE",
-    "status4k": "UNKNOWN"
-  },
-  "request": {
-    "request_id": "141",
-    "requestedBy_email": "drinconada@gmail.com",
-    "requestedBy_username": "Gudnight",
-    "requestedBy_avatar": "https://plex.tv/users/45eb1bbd0c2fb9b5/avatar?c=1703945653"
-  },
-  "issue": null,
-  "comment": null,
-  "extra": []
-*/
+export async function sendEndOfEpisodeMessageFromTautulliWebhook(chatId: string, tautulliPayload: TautulliNotificationPayload) {}

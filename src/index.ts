@@ -1,6 +1,8 @@
 import express from 'express'
-import { OverseerrPayload, sendMessageFromOverseerrWebhook } from './utils/telegramBot.js'
+import { sendMessageFromOverseerrWebhook } from './utils/telegramBot.js'
 import { logger } from './utils/logger.js';
+import { OverseerrPayload } from './types/overseerr';
+import { TautulliNotificationPayload } from './types/tautulli'
 
 const app = express();
 const port = process.env.PORT || 3000
@@ -20,11 +22,11 @@ app.post('/webhook/overseerr-media-notification', async (req, res) => {
   logger.overseerrMedia('Received webhook from Overseer: ', body)
 
   try {
-    await sendMessageFromOverseerrWebhook(process.env.TELEGRAM_CHAT_ID!, body)
+    await sendMessageFromOverseerrWebhook(process.env.TELEGRAM_MEDIA_CHAT_ID!, body)
 
     return res.status(200).json({
       message: 'Telegram message successfully sent',
-      chatId: process.env.TELEGRAM_CHAT_ID,
+      chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
       title: body.subject,
       notificationType: body.notification_type,
       error: null,
@@ -32,7 +34,7 @@ app.post('/webhook/overseerr-media-notification', async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: 'Telegram message not sent',
-      chatId: process.env.TELEGRAM_CHAT_ID,
+      chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
       title: body.subject,
       notificationType: body.notification_type,
       error,
@@ -41,21 +43,57 @@ app.post('/webhook/overseerr-media-notification', async (req, res) => {
 })
 
 app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
-  const body = req.body
+  const body: TautulliNotificationPayload = req.body
   logger.tautulliTranscoding('Received webhook from Tautulli Transcoding Notification: ', body)
 
-  res.status(200).send('OK')
+  try {
+    // await sendTranscodingMessageFromTautulliWebhook(process.env.TELEGRAM_TRANSCODING_CHAT_ID!, body)
+
+    return res.status(200).json({
+      message: 'Telegram message successfully sent',
+      chatId: process.env.TELEGRAM_TRANSCODING_CHAT_ID,
+      title: body.title,
+      user: body.user,
+      error: null,
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Telegram message not sent',
+      chatId: process.env.TELEGRAM_TRANSCODING_CHAT_ID,
+      title: body.title,
+      user: body.user,
+      error,
+    })
+  }
 });
 
 app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
-  const body = req.body
+  const body: TautulliNotificationPayload = req.body
   logger.tuautlliLastEpisode('Received webhook from Tautulli Last Episode Notification: ', body)
 
-  res.status(200).send('OK')
+  try {
+    // await sendEndOfEpisodeMessageFromTautulliWebhook(process.env.TELEGRAM_LAST_EPISODE_CHAT_ID!, body)
+
+    return res.status(200).json({
+      message: 'Telegram message successfully sent',
+      chatId: process.env.TELEGRAM_LAST_EPISODE_CHAT_ID,
+      title: body.title,
+      user: body.user,
+      error: null,
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Telegram message not sent',
+      chatId: process.env.TELEGRAM_LAST_EPISODE_CHAT_ID,
+      title: body.title,
+      user: body.user,
+      error,
+    })
+  }
 })
 
 app.listen(port, () => {
-  logger.info(`Server is running on ${port}`)
+  logger.info('Server is running on', port)
 })
 
 process.on('uncaughtException', (err) => {
