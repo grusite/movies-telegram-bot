@@ -1,6 +1,6 @@
 import axios from 'axios'
-import type { IMDbMedia, IMDbTitleSearchResponse } from '../types/IMDB'
-import { logger } from './logger'
+import type { IMDbMedia, IMDbTitleSearchResponse } from '../../types/IMDB'
+import { logger } from '../logger.js'
 
 /**
  * Fetches detailed IMDb information for a given movie title and year.

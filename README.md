@@ -10,6 +10,50 @@ This repository contains a Node.js application for a Telegram Bot designed to en
 - Telegram Bot Token
 - Overseerr and Tautulli setup for webhook integration
 
+Example of Tautulli config JSON to be sent for the serie and the transcoding:
+
+```json
+// For Transcoding webhook
+{
+  "title": "{title}",
+  "user": "{user}",
+  "player": "{player}",
+  "action": "{action}",
+  "media_type": "{media_type}",
+  "themoviedb_id": "{themoviedb_id}",
+  "transcode_info": {
+    "transcode_decision": "{transcode_decision}",
+    "video_decision": "{video_decision}",
+    "audio_decision": "{audio_decision}",
+    "container": "{container}",
+    "transcode_container": "{transcode_container}",
+    "transcode_video_codec": "{transcode_video_codec}",
+    "video_codec": "{video_codec}",
+    "transcode_audio_codec": "{transcode_audio_codec}",
+    "audio_codec": "{audio_codec}",
+    "quality": "{stream_bitrate} kbps",
+    "original_bitrate": "{bitrate}"
+  }
+}
+
+// For Last Episode webhook
+{
+  "title": "{title}",
+  "user": "{user}",
+  "player": "{player}",
+  "action": "{action}",
+  "media_type": "{media_type}",
+  "themoviedb_id": "{themoviedb_id}",
+    "serie_info": {
+    "episode_name": "{episode_name}",
+    "episode_num": "{episode_num}",
+    "episode_count": "{episode_count}",
+    "season_num": "{season_num}",
+    "season_count": "{season_count}"
+  }
+}
+```
+
 ## Installation
 
 1. Clone the repository:
@@ -124,6 +168,7 @@ Example of a Movie POST notification from Overseerr:
 
 Example of a Tautulli Transcoding POST notification:
 ```json
+// Not Transcoding
 {
   "title": "Los Juegos del Hambre: Sinsajo - Parte 2",
   "user": "grusite",
@@ -151,6 +196,7 @@ Example of a Tautulli Transcoding POST notification:
   }
 }
 
+// Transcoding
 {
   "title": "Rain Man",
   "user": "Fermolmez",

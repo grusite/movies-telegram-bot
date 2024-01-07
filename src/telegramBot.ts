@@ -1,10 +1,10 @@
 import TelegramBot from "node-telegram-bot-api";
-import { getIMDBInfoById, getIMDBInfoByTitleAndYear } from './IMDB.js'
-import { getTMDBInfoById, getTMDBInfoByTitleAndYear} from './TMDB.js'
-import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook } from './index.js'
-import { logger } from "./logger.js";
-import type { OverseerrPayload } from "../types/overseerr"
-import type { TautulliNotificationPayload } from '../types/tautulli'
+import { getIMDBInfoById, getIMDBInfoByTitleAndYear } from './utils/providers/IMDB.js'
+import { getTMDBInfoById, getTMDBInfoByTitleAndYear } from './utils/providers/TMDB.js'
+import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook, formatQuality } from './utils/index.js'
+import { logger } from "./utils/logger.js";
+import type { OverseerrPayload } from "./types/overseerr.js"
+import type { TautulliTranscodingNotificationPayload, TautulliLastEpisodeNotificationPayload } from './types/tautulli.js'
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
 // bot.on('message', async (msg) => readAndSendMessage(msg))
@@ -185,14 +185,10 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       caption += `<a href="https://www.themoviedb.org/${media.media_type}/${media.tmdbId}">Ver media en TMDB</a>\n`
 
       // Send the photo with the caption to the chat
-      bot
-        .sendPhoto(chatId, tmdbInfo.coverImageUrl, {
-          caption,
-          parse_mode: 'HTML',
-        })
-        .catch((error) => {
-          logger.error(error.message)
-        })
+      await bot.sendPhoto(chatId, tmdbInfo.coverImageUrl, {
+        caption,
+        parse_mode: 'HTML',
+      })
     }
   } catch (err) {
     const error = err as Error;
@@ -202,6 +198,94 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
   }
 }
 
-export async function sendTranscodingMessageFromTautulliWebhook(chatId: string, tautulliPayload: TautulliNotificationPayload) {}
+export async function sendTranscodingMessageFromTautulliWebhook(
+  chatId: string,
+  tautulliPayload: TautulliTranscodingNotificationPayload
+) {
+  const { user, title, themoviedb_id, media_type, player, transcode_info, action } = tautulliPayload
 
-export async function sendEndOfEpisodeMessageFromTautulliWebhook(chatId: string, tautulliPayload: TautulliNotificationPayload) {}
+  if (transcode_info.transcode_decision === 'Direct Play') throw new Error("Direct Play");
+
+  const actualQualityFormatted = transcode_info.quality ? formatQuality(transcode_info.quality) : 'N/A';
+  const originalQualityFormatted = transcode_info.original_bitrate ? formatQuality(transcode_info.original_bitrate) : 'N/A';
+
+  const caption =
+    `🚨 <strong>${title} - Transcoding alert</strong> 🚨\n\n` +
+    `👤 <strong>Usuario:</strong> ${user}\n` +
+    `🔄 <strong>Acción:</strong> ${action}\n` +
+    `▶️ <strong>Reproductor:</strong> ${player}\n` +
+    `🎬 <strong>Vídeo:</strong> ${transcode_info.video_decision} (${
+      transcode_info.video_codec ?? 'N/A'
+    } -> ${transcode_info.transcode_video_codec ?? 'N/A'})\n` +
+    `🔊 <strong>Audio:</strong> ${transcode_info.audio_decision} (${
+      transcode_info.audio_codec ?? 'N/A'
+    } -> ${transcode_info.transcode_audio_codec ?? 'N/A'})\n` +
+    `📊 <strong>Calidad:</strong>\n` +
+    `      - Actual: ${actualQualityFormatted}\n` +
+    `      - Original: ${originalQualityFormatted}\n` +
+    `\n\n` +
+    `🔥 ¡El NAS está que arde! 🔥`
+
+  try {
+    const tmdbInfo = themoviedb_id
+      ? await getTMDBInfoById(+themoviedb_id, media_type === 'movie')
+      : undefined
+
+    tmdbInfo
+      ? await bot.sendPhoto(chatId, tmdbInfo.coverImageUrl, {
+          caption,
+          parse_mode: 'HTML',
+        })
+      : await bot.sendMessage(chatId, caption, { parse_mode: 'HTML' })
+  } catch (err) {
+    const error = err as Error
+    bot.sendMessage(
+      chatId,
+      `Ups! Siento deciros que ha habido un error al intentar mandar la info de: ${user} haciendo Transcoding de ${title}`
+    )
+    logger.error(error.message)
+    throw error.message
+  }
+}
+
+export async function sendEndOfEpisodeMessageFromTautulliWebhook(
+  chatId: string,
+  tautulliPayload: TautulliLastEpisodeNotificationPayload
+) {
+  const { user, title, themoviedb_id, media_type, serie_info } = tautulliPayload
+
+  let caption =
+    `🎬 <strong>¡Atención!</strong> 🎬\n\n` +
+    `<strong>${user}</strong> está viendo el último episodio (${serie_info.episode_num}) de la temporada ${serie_info.season_num} de: ` +
+    `<strong>'${title}'</strong>\n\n` +
+    `🥺 ¡Prepárense para decir adiós! 🥺`
+
+  try {
+    if (media_type === 'movie') throw new Error('No es una serie')
+
+    const tmdbInfo = themoviedb_id
+      ? await getTMDBInfoById(+themoviedb_id, false)
+      : undefined
+
+    if(tmdbInfo) {
+      const isLastEpisode = tmdbInfo.seasons.some(
+        (season) => season.season_number === +serie_info.season_num && season.episode_count === +serie_info.episode_num
+      );
+
+      if(isLastEpisode) {
+        await bot.sendPhoto(chatId, tmdbInfo.coverImageUrl, {
+          caption,
+          parse_mode: 'HTML',
+        })
+      } else {
+         throw new Error('No es el último episodio')
+      }
+    } else {
+      throw new Error('No se encontró información de la temporada en TMDB')
+    }
+  } catch (err) {
+    const error = err as Error
+    logger.error(error.message)
+    throw error.message
+  }
+}

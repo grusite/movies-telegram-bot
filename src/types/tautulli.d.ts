@@ -1,11 +1,18 @@
-export interface TautulliNotificationPayload {
+export type TautulliTranscodingNotificationPayload = GeneralInfo & {
+  transcode_info: TranscodeInfo
+}
+
+export type TautulliLastEpisodeNotificationPayload = GeneralInfo & {
+  serie_info: SerieInfo
+}
+
+export interface GeneralInfo {
   title: string
   user: string
   player: string
   action: string
   media_type: string
-  serie_info: SerieInfo
-  transcode_info: TranscodeInfo
+  themoviedb_id: string
 }
 
 export interface SerieInfo {
@@ -27,4 +34,5 @@ export interface TranscodeInfo {
   transcode_audio_codec: string
   audio_codec: string
   quality: string
+  original_bitrate: string
 }

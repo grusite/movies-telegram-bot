@@ -1,8 +1,8 @@
 import express from 'express'
-import { sendMessageFromOverseerrWebhook } from './utils/telegramBot.js'
+import { sendMessageFromOverseerrWebhook, sendTranscodingMessageFromTautulliWebhook, sendEndOfEpisodeMessageFromTautulliWebhook } from './telegramBot.js'
 import { logger } from './utils/logger.js';
 import { OverseerrPayload } from './types/overseerr';
-import { TautulliNotificationPayload } from './types/tautulli'
+import { TautulliTranscodingNotificationPayload, TautulliLastEpisodeNotificationPayload } from './types/tautulli'
 
 const app = express();
 const port = process.env.PORT || 3000
@@ -43,11 +43,11 @@ app.post('/webhook/overseerr-media-notification', async (req, res) => {
 })
 
 app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
-  const body: TautulliNotificationPayload = req.body
+  const body: TautulliTranscodingNotificationPayload = req.body
   logger.tautulliTranscoding('Received webhook from Tautulli Transcoding Notification: ', body)
 
   try {
-    // await sendTranscodingMessageFromTautulliWebhook(process.env.TELEGRAM_TRANSCODING_CHAT_ID!, body)
+    await sendTranscodingMessageFromTautulliWebhook(process.env.TELEGRAM_TRANSCODING_CHAT_ID!, body)
 
     return res.status(200).json({
       message: 'Telegram message successfully sent',
@@ -68,11 +68,11 @@ app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
 });
 
 app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
-  const body: TautulliNotificationPayload = req.body
+  const body: TautulliLastEpisodeNotificationPayload = req.body
   logger.tuautlliLastEpisode('Received webhook from Tautulli Last Episode Notification: ', body)
 
   try {
-    // await sendEndOfEpisodeMessageFromTautulliWebhook(process.env.TELEGRAM_LAST_EPISODE_CHAT_ID!, body)
+    await sendEndOfEpisodeMessageFromTautulliWebhook(process.env.TELEGRAM_LAST_EPISODE_CHAT_ID!, body)
 
     return res.status(200).json({
       message: 'Telegram message successfully sent',

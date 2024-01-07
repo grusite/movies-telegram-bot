@@ -61,3 +61,23 @@ export function formatRatingNumber(number: number) {
     return number.toString()
   }
 }
+
+/**
+ * Converts a bitrate from kbps to a more readable format (Kbps or Mbps).
+ * 
+ * This function takes a bitrate value in kilobits per second (kbps) and converts it to a more
+ * human-readable format. If the bitrate is 1000 kbps or more, it converts it to megabits per second (Mbps).
+ * Otherwise, it keeps the value in kilobits per second (Kbps).
+ * 
+ * @param {string} qualityInKbps - The quality in kilobits per second as a string.
+ * @returns {string} The formatted quality in Kbps or Mbps.
+ */
+export function formatQuality(qualityInKbps: string) {
+  const qualityInKbpsNum = parseInt(qualityInKbps, 10)
+
+  if (qualityInKbpsNum >= 1000) {
+    return (qualityInKbpsNum / 1000).toFixed(2) + ' Mbps'
+  } else {
+    return qualityInKbpsNum + ' Kbps'
+  }
+}

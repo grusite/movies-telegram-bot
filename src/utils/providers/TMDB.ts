@@ -3,8 +3,11 @@ import type {
   TMDbMediaSearchResponse,
   TMDbMovieDetailResponse,
   TMDbSeriesDetailResponse,
-} from '../types/TMDB'
-import { logger } from './logger'
+} from '../../types/TMDB'
+import { logger } from '../logger.js'
+import { TautulliLastEpisodeNotificationPayload } from 'src/types/tautulli'
+
+const API_KEY = process.env.TMDB_API_KEY;
 
 /**
  * Fetches detailed information from TMDb API for a given title and year.
@@ -16,10 +19,9 @@ import { logger } from './logger'
  */
 export async function getTMDBInfoByTitleAndYear(title: string, year: number, isMovie = true) {
   logger.info(`TMDB MovieInfo: Title - ${title}, Year - ${year}, isMovie - ${isMovie}`)
-  const apiKey = process.env.TMDB_API_KEY
   const url = `https://api.themoviedb.org/3/search/${
     isMovie ? 'movie' : 'tv'
-  }?api_key=${apiKey}&language=es-ES&query=${encodeURIComponent(title)}&year=${year}`
+  }?api_key=${API_KEY}&language=es-ES&query=${encodeURIComponent(title)}&year=${year}`
 
   try {
     const response = await axios.get<TMDbMediaSearchResponse>(url)
@@ -35,7 +37,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
     if (media) {
       const detailsUrl = `https://api.themoviedb.org/3/${isMovie ? 'movie' : 'tv'}/${
         media.id
-      }?api_key=${apiKey}&language=es-ES`
+      }?api_key=${API_KEY}&language=es-ES`
       const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
         detailsUrl
       )
@@ -79,10 +81,9 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
  * @returns {Promise<Object>} A promise that resolves to an object containing the title, genres, type, seriesInfo, cover image URL, plot, and rating from TMDb.
  */
 export async function getTMDBInfoById(id: number, isMovie = true) {
-  const apiKey = process.env.TMDB_API_KEY;
   const detailsUrl = `https://api.themoviedb.org/3/${isMovie ? 'movie' : 'tv'}/${
     id
-  }?api_key=${apiKey}&language=es-ES`;
+  }?api_key=${API_KEY}&language=es-ES`;
   const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
     detailsUrl
   )
@@ -105,6 +106,7 @@ export async function getTMDBInfoById(id: number, isMovie = true) {
     },
     genres: mediaDetail.genres.map((g) => g.name),
     type: isMovie ? 'película' : 'serie',
+    seasons: (mediaDetail as TMDbSeriesDetailResponse).seasons,
     numberOfEpisodes: isMovie
       ? undefined
       : (mediaDetail as TMDbSeriesDetailResponse).number_of_episodes,
