@@ -206,7 +206,11 @@ export async function sendTranscodingMessageFromTautulliWebhook(
 
   if (transcode_info.transcode_decision === 'Direct Play') throw new Error("Direct Play");
 
-  const actualQualityFormatted = transcode_info.stream_video_bitrate ? formatQuality(transcode_info.quality) : transcode_info.quality ? formatQuality(transcode_info.quality) : 'N/A';
+  const actualQualityFormatted = transcode_info.stream_video_bitrate
+    ? formatQuality(transcode_info.stream_video_bitrate)
+    : transcode_info.quality
+    ? formatQuality(transcode_info.quality)
+    : 'N/A'
   const originalQualityFormatted = transcode_info.original_bitrate ? formatQuality(transcode_info.original_bitrate) : 'N/A';
 
   const caption =

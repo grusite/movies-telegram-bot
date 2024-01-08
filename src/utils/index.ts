@@ -73,11 +73,16 @@ export function formatRatingNumber(number: number) {
  * @returns {string} The formatted quality in Kbps or Mbps.
  */
 export function formatQuality(qualityInKbps: string) {
-  const qualityInKbpsNum = parseInt(qualityInKbps, 10)
+  const MAX_BITRATE = 2147483647;
+  const qualityInKbpsNum = parseInt(qualityInKbps, 10);
+
+  // if (qualityInKbpsNum === MAX_BITRATE) {
+  //   return 'Unknown';
+  // }
 
   if (qualityInKbpsNum >= 1000) {
-    return (qualityInKbpsNum / 1000).toFixed(2) + ' Mbps'
+    return (qualityInKbpsNum / 1000).toFixed(2) + ' Mbps';
   } else {
-    return qualityInKbpsNum + ' Kbps'
+    return qualityInKbpsNum + ' Kbps';
   }
 }
