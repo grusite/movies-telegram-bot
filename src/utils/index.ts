@@ -76,9 +76,9 @@ export function formatQuality(qualityInKbps: string) {
   const MAX_BITRATE = 2147483647;
   const qualityInKbpsNum = parseInt(qualityInKbps, 10);
 
-  // if (qualityInKbpsNum === MAX_BITRATE) {
-  //   return 'Unknown';
-  // }
+  if (qualityInKbpsNum === MAX_BITRATE) {
+    return 'Unknown';
+  }
 
   if (qualityInKbpsNum >= 1000) {
     return (qualityInKbpsNum / 1000).toFixed(2) + ' Mbps';

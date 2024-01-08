@@ -262,7 +262,7 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
     `🎬 <strong>¡Atención!</strong> 🎬\n\n` +
     `<strong>${user}</strong> está viendo el último episodio (${serie_info.episode_num}) de la temporada ${serie_info.season_num} de: ` +
     `<strong>'${title}'</strong>\n\n` +
-    `🥺 ¡Prepárense para decir adiós! 🥺`
+    `¡Prepárense para decir adiós! 🥺`
 
   try {
     if (media_type === 'movie') throw new Error('No es una serie')
