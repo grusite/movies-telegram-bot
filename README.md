@@ -31,8 +31,10 @@ Example of Tautulli config JSON to be sent for the serie and the transcoding:
     "video_codec": "{video_codec}",
     "transcode_audio_codec": "{transcode_audio_codec}",
     "audio_codec": "{audio_codec}",
-    "quality": "{stream_bitrate} kbps",
-    "original_bitrate": "{bitrate}"
+    "quality": "{stream_bitrate}",
+    "original_bitrate": "{bitrate}",
+    "stream_video_resolution": "{stream_video_resolution}",
+    "stream_video_bitrate": "{stream_video_bitrate}"
   }
 }
 
@@ -203,6 +205,7 @@ Example of a Tautulli Transcoding POST notification:
   "player": "Feer",
   "action": "change",
   "media_type": "movie",
+  "themoviedb_id": "475557",
   "serie_info": {
     "episode_name": "Rain Man",
     "episode_num": "0",
@@ -220,7 +223,8 @@ Example of a Tautulli Transcoding POST notification:
     "video_codec": "hevc",
     "transcode_audio_codec": "opus",
     "audio_codec": "ac3",
-    "quality": "7113 kbps"
+    "quality": "7113",
+    "original_bitrate": "143760"
   }
 }
 ```

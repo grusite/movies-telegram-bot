@@ -35,4 +35,6 @@ export interface TranscodeInfo {
   audio_codec: string
   quality: string
   original_bitrate: string
+  stream_video_resolution: string
+  stream_video_bitrate: string
 }

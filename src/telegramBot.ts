@@ -206,7 +206,7 @@ export async function sendTranscodingMessageFromTautulliWebhook(
 
   if (transcode_info.transcode_decision === 'Direct Play') throw new Error("Direct Play");
 
-  const actualQualityFormatted = transcode_info.quality ? formatQuality(transcode_info.quality) : 'N/A';
+  const actualQualityFormatted = transcode_info.stream_video_bitrate ? formatQuality(transcode_info.quality) : transcode_info.quality ? formatQuality(transcode_info.quality) : 'N/A';
   const originalQualityFormatted = transcode_info.original_bitrate ? formatQuality(transcode_info.original_bitrate) : 'N/A';
 
   const caption =
@@ -221,7 +221,7 @@ export async function sendTranscodingMessageFromTautulliWebhook(
       transcode_info.audio_codec ?? 'N/A'
     } -> ${transcode_info.transcode_audio_codec ?? 'N/A'})\n` +
     `📊 <strong>Calidad:</strong>\n` +
-    `      - Actual: ${actualQualityFormatted}\n` +
+    `      - Actual: ${actualQualityFormatted} (${transcode_info.stream_video_resolution})\n` +
     `      - Original: ${originalQualityFormatted}\n` +
     `\n\n` +
     `🔥 ¡El NAS está que arde! 🔥`
