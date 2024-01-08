@@ -232,7 +232,7 @@ export async function sendTranscodingMessageFromTautulliWebhook(
 
   try {
     const tmdbInfo = themoviedb_id
-      ? await getTMDBInfoById(+themoviedb_id, media_type === 'movie')
+      ? await getTMDBInfoById(+themoviedb_id, media_type === 'movie', false)
       : undefined
 
     tmdbInfo

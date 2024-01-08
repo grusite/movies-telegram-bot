@@ -80,14 +80,14 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
  * @param {boolean} isMovie - Indicates if the title is a movie (true) or series (false).
  * @returns {Promise<Object>} A promise that resolves to an object containing the title, genres, type, seriesInfo, cover image URL, plot, and rating from TMDb.
  */
-export async function getTMDBInfoById(id: number, isMovie = true) {
+export async function getTMDBInfoById(id: number, isMovie = true, console = true) {
   const detailsUrl = `https://api.themoviedb.org/3/${isMovie ? 'movie' : 'tv'}/${
     id
   }?api_key=${API_KEY}&language=es-ES`;
   const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
     detailsUrl
   )
-  logger.info('TMDb details', detailsResponse.data)
+  console ? logger.info('TMDb details', detailsResponse.data) : null;
   
   // TS guards to type it correctly
   const mediaDetail = detailsResponse.data as TMDbMovieDetailResponse | TMDbSeriesDetailResponse;
