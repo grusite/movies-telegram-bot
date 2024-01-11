@@ -142,7 +142,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         const digitalUSRelease = us?.release_dates.find((d) => d.type === 4)
         const digitalESRelease = es?.release_dates.find((d) => d.type === 4)
 
-        if (!cinemaUSRelease || !cinemaESRelease || !digitalESRelease ||!digitalUSRelease) {
+        if (!cinemaUSRelease || !cinemaESRelease || !digitalESRelease || !digitalUSRelease) {
           const caption =
             `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
             `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
@@ -273,6 +273,24 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
 
       // Send the photo with the caption to the chat
       await bot.sendPhoto(chatId, imdbInfo.coverImageUrl, {
+        caption,
+        parse_mode: 'HTML',
+      })
+    } else {
+      /* Movie info (title+desc) */
+      let caption = `<strong>${event} ${subject}</strong>\n`
+      caption += `${message}\n`
+      caption += `\n`
+
+      /* Requested info */
+      if (request) {
+        caption += `<strong>Pedido por: </strong><a href="${request.requestedBy_avatar}">${request.requestedBy_username}</a>\n`
+      }
+      caption += `<strong>Estado:</strong> ${
+        notification_type === 'MEDIA_AVAILABLE' ? 'Disponible' : notification_type
+      }\n`
+
+      await bot.sendPhoto(chatId, image, {
         caption,
         parse_mode: 'HTML',
       })
