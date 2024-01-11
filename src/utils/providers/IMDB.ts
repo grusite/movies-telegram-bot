@@ -2,6 +2,8 @@ import axios from 'axios'
 import type { IMDbMedia, IMDbTitleSearchResponse } from '../../types/IMDB'
 import { logger } from '../logger.js'
 
+const baseUrl = 'https://moviesdatabase.p.rapidapi.com'
+
 /**
  * Fetches detailed IMDb information for a given movie title and year.
  *
@@ -20,7 +22,7 @@ export async function getIMDBInfoById(id: string) {
   try {
     const res = await axios.request<IMDbTitleSearchResponse>({
       ...options,
-      url: `https://moviesdatabase.p.rapidapi.com/titles/${id}`,
+      url: `${baseUrl}/titles/${id}`,
       params: { info: 'base_info' },
     })
     logger.info('IMDd id search result', res.data)
@@ -68,7 +70,7 @@ export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
   try {
     let res = await axios.request<IMDbTitleSearchResponse>({
       ...options,
-      url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(title)}`,
+      url: `${baseUrl}/titles/search/title/${encodeURIComponent(title)}`,
       params: { exact: 'true', info: 'base_info' },
     })
     logger.info('IMDd title search result', res.data)
@@ -77,7 +79,7 @@ export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
     if (res.data && res.data.entries === 0) {
       res = await axios.request<IMDbTitleSearchResponse>({
         ...options,
-        url: `https://moviesdatabase.p.rapidapi.com/titles/search/title/${encodeURIComponent(
+        url: `${baseUrl}/titles/search/title/${encodeURIComponent(
           title.split(' ').slice(0, 2).join(' ')
         )}`,
         params: { exact: 'true', info: 'base_info' },

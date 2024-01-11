@@ -3,11 +3,13 @@ import type {
   TMDbMediaSearchResponse,
   TMDbMovieDetailResponse,
   TMDbSeriesDetailResponse,
+  TMDBCreditsResponse
 } from '../../types/TMDB'
 import { logger } from '../logger.js'
-import { TautulliLastEpisodeNotificationPayload } from 'src/types/tautulli'
 
 const API_KEY = process.env.TMDB_API_KEY;
+const baseUrl = 'https://api.themoviedb.org/3'
+const imgOriginalPath = 'https://image.tmdb.org/t/p/original'
 
 /**
  * Fetches detailed information from TMDb API for a given title and year.
@@ -19,7 +21,7 @@ const API_KEY = process.env.TMDB_API_KEY;
  */
 export async function getTMDBInfoByTitleAndYear(title: string, year: number, isMovie = true) {
   logger.info(`TMDB MovieInfo: Title - ${title}, Year - ${year}, isMovie - ${isMovie}`)
-  const url = `https://api.themoviedb.org/3/search/${
+  const url = `${baseUrl}/search/${
     isMovie ? 'movie' : 'tv'
   }?api_key=${API_KEY}&language=es-ES&query=${encodeURIComponent(title)}&year=${year}`
 
@@ -35,7 +37,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
     )
 
     if (media) {
-      const detailsUrl = `https://api.themoviedb.org/3/${isMovie ? 'movie' : 'tv'}/${
+      const detailsUrl = `${baseUrl}/${isMovie ? 'movie' : 'tv'}/${
         media.id
       }?api_key=${API_KEY}&language=es-ES`
       const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
@@ -58,7 +60,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
         numberOfSeasons: isMovie
           ? undefined
           : (detailsResponse.data as TMDbSeriesDetailResponse).number_of_seasons,
-        coverImageUrl: `https://image.tmdb.org/t/p/original${media.poster_path}`,
+        coverImageUrl: `${imgOriginalPath}${media.poster_path}`,
         plot: media.overview,
         rating: {
           total: Math.round(media.vote_average * 10) / 10,
@@ -81,7 +83,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
  * @returns {Promise<Object>} A promise that resolves to an object containing the title, genres, type, seriesInfo, cover image URL, plot, and rating from TMDb.
  */
 export async function getTMDBInfoById(id: number, isMovie = true, console = true) {
-  const detailsUrl = `https://api.themoviedb.org/3/${isMovie ? 'movie' : 'tv'}/${
+  const detailsUrl = `${baseUrl}/${isMovie ? 'movie' : 'tv'}/${
     id
   }?api_key=${API_KEY}&language=es-ES`;
   const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
@@ -113,11 +115,31 @@ export async function getTMDBInfoById(id: number, isMovie = true, console = true
     numberOfSeasons: isMovie
       ? undefined
       : (detailsResponse.data as TMDbSeriesDetailResponse).number_of_seasons,
-    coverImageUrl: `https://image.tmdb.org/t/p/original${mediaDetail.poster_path}`,
+    coverImageUrl: `${imgOriginalPath}${mediaDetail.poster_path}`,
     plot: mediaDetail.overview,
     rating: {
       total: Math.round(mediaDetail.vote_average * 10) / 10,
       numVotes: mediaDetail.vote_count,
     },
+  }
+}
+
+export async function getTMDBCredits(id: number, isMovie = true, console = true) {
+  const detailsUrl = `${baseUrl}/${
+    isMovie ? 'movie' : 'tv'
+  }/${id}/credits?api_key=${API_KEY}&language=es-ES`
+  const detailsResponse = await axios.get<TMDBCreditsResponse>(
+    detailsUrl
+  )
+  console ? logger.info('TMDb credits', detailsResponse.data) : null
+
+  return {
+    id,
+    cast: detailsResponse.data.cast.map((c) => {
+      return {
+        ...c,
+        profile_path: c.profile_path ? `${imgOriginalPath}${c.profile_path}` : null,
+      }
+    }),
   }
 }

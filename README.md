@@ -22,19 +22,33 @@ Example of Tautulli config JSON to be sent for the serie and the transcoding:
   "media_type": "{media_type}",
   "themoviedb_id": "{themoviedb_id}",
   "transcode_info": {
+    // Transcoding decition
     "transcode_decision": "{transcode_decision}",
     "video_decision": "{video_decision}",
     "audio_decision": "{audio_decision}",
+    "subtitle_decision": "{subtitle_decision}",
+    // Container info
     "container": "{container}",
+    "stream_container": "{stream_container}",
     "transcode_container": "{transcode_container}",
-    "transcode_video_codec": "{transcode_video_codec}",
+    // Codecs
     "video_codec": "{video_codec}",
-    "transcode_audio_codec": "{transcode_audio_codec}",
+    "transcode_video_codec": "{transcode_video_codec}",
     "audio_codec": "{audio_codec}",
-    "quality": "{stream_bitrate}",
+    "transcode_audio_codec": "{transcode_audio_codec}",
+    "subtitle_codec": "{subtitle_codec}",
+    "stream_subtitle_codec": "{stream_subtitle_codec}",
+    "subtitle_language": "{subtitle_language}",
+    // Bitrate
     "original_bitrate": "{bitrate}",
-    "stream_video_resolution": "{stream_video_resolution}",
-    "stream_video_bitrate": "{stream_video_bitrate}"
+    "video_bitrate": "{video_bitrate}",
+    "audio_bitrate": "{audio_bitrate}",
+    "stream_bitrate": "{stream_bitrate}",
+    "stream_video_bitrate": "{stream_video_bitrate}",
+    "stream_audio_bitrate": "{stream_audio_bitrate}",
+    // Resolution
+    "video_resolution": "{video_resolution}",
+    "stream_video_resolution": "{stream_video_resolution}"
   }
 }
 

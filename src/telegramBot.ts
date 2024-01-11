@@ -1,6 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
 import { getIMDBInfoById, getIMDBInfoByTitleAndYear } from './utils/providers/IMDB.js'
-import { getTMDBInfoById, getTMDBInfoByTitleAndYear } from './utils/providers/TMDB.js'
+import { getTMDBInfoById, getTMDBInfoByTitleAndYear, getTMDBCredits } from './utils/providers/TMDB.js'
 import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook, formatQuality } from './utils/index.js'
 import { logger } from "./utils/logger.js";
 import type { OverseerrPayload } from "./types/overseerr.js"
@@ -129,9 +129,12 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     if(!media || (!mediaInfo && !isMovie)) throw new Error(`No media info found for: ${subject}`)
 
     // Fetch IMDb and TMDb data for the movie
-    const tmdbInfo = await getTMDBInfoById(+media.tmdbId, isMovie);
-    const imdbInfo = isMovie ? await getIMDBInfoById(tmdbInfo.imdbId) : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year);
-    logger.overseerrMedia("imdbInfo: ", imdbInfo)
+    const tmdbInfo = +media.tmdbId ? await getTMDBInfoById(+media.tmdbId, isMovie) : undefined;
+    const imdbInfo =
+      isMovie && tmdbInfo?.imdbId
+        ? await getIMDBInfoById(tmdbInfo.imdbId)
+        : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year)
+    const credits = +media.tmdbId ? await getTMDBCredits(+media.tmdbId, isMovie, false) : undefined;
 
     if (tmdbInfo) {
       /* Movie info (title+desc) */
@@ -140,6 +143,15 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         mediaInfo!.year
       })</strong>\n`
       caption += `<strong>Géneros:</strong> ${tmdbInfo.genres.join(', ')}\n`
+      if (credits) {
+        caption += `<strong>Reparto:</strong> <a href="${credits.cast[0].profile_path ?? '#'}">${
+          credits.cast[0].name
+        }</a> (${credits.cast[0].character}), <a href="${credits.cast[1].profile_path ?? '#'}">${
+          credits.cast[1].name
+        }</a> (${credits.cast[1].character}), <a href="${credits.cast[2].profile_path ?? '#'}">${
+          credits.cast[2].name
+        }</a> (${credits.cast[2].character})...\n`
+      }
       caption += `\n`
       caption += `<strong>${tmdbInfo.title?.tagline}</strong>\n`
       caption += `${
@@ -189,6 +201,45 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         caption,
         parse_mode: 'HTML',
       })
+    } else if(imdbInfo) {
+      /* Movie info (title+desc) */
+      let caption = `<strong>New ${imdbInfo.type} - ${imdbInfo.title} (${
+        mediaInfo!.year
+      })</strong>\n`
+      caption += `<strong>Genres:</strong> ${imdbInfo.genres.join(', ')}\n`
+      caption += `\n`
+      caption += `${
+        imdbInfo.plot.length > 600 ? imdbInfo.plot.slice(0, 600) + '...' : imdbInfo.plot
+      }\n`
+      caption += `\n`
+
+      /* Requested info */
+      if (request) {
+        caption += `<strong>Pedido por: </strong><a href="${request.requestedBy_avatar}">${request.requestedBy_username}</a>\n`
+      }
+      caption += `<strong>Estado:</strong> ${
+        notification_type === 'MEDIA_AVAILABLE' ? 'Disponible' : notification_type
+      }\n`
+
+      /* Ratings */
+      caption += `<strong>Rating:</strong>\n`
+      if (imdbInfo.rating?.total && imdbInfo.rating?.numVotes) {
+        caption += `    - <strong>IMDB</strong>: <strong>${
+          imdbInfo.rating.total
+        }/10</strong> <em>(${formatRatingNumber(imdbInfo.rating.numVotes)} votos)</em>\n`
+        caption += `\n`
+      }
+
+      /* Important links */
+      if (imdbInfo && imdbInfo.id) {
+        caption += `<a href="https://www.imdb.com/title/${imdbInfo.id}">Ver media en IMDB</a>\n`
+      }
+
+      // Send the photo with the caption to the chat
+      await bot.sendPhoto(chatId, imdbInfo.coverImageUrl, {
+        caption,
+        parse_mode: 'HTML',
+      })
     }
   } catch (err) {
     const error = err as Error;
@@ -206,27 +257,59 @@ export async function sendTranscodingMessageFromTautulliWebhook(
 
   if (transcode_info.transcode_decision === 'Direct Play') throw new Error("Direct Play");
 
-  const actualQualityFormatted = transcode_info.stream_video_bitrate
-    ? formatQuality(transcode_info.stream_video_bitrate)
-    : transcode_info.quality
-    ? formatQuality(transcode_info.quality)
+  const originalQualityFormatted = transcode_info.original_bitrate
+    ? formatQuality(transcode_info.original_bitrate)
     : 'N/A'
-  const originalQualityFormatted = transcode_info.original_bitrate ? formatQuality(transcode_info.original_bitrate) : 'N/A';
+  const streamQualityFormatted = transcode_info.stream_bitrate
+      ? formatQuality(transcode_info.stream_bitrate)
+      : 'N/A'
+  const originalVideoQualityFormatted = transcode_info.video_bitrate
+    ? formatQuality(transcode_info.video_bitrate)
+    : 'N/A'
+  const actualVideoQualityFormatted = transcode_info.stream_video_bitrate
+    ? formatQuality(transcode_info.stream_video_bitrate)
+    : 'N/A'
+  const originalAudioQualityFormatted = transcode_info.audio_bitrate
+    ? formatQuality(transcode_info.audio_bitrate)
+    : 'N/A'
+  const actualAudioQualityFormatted = transcode_info.stream_audio_bitrate
+    ? formatQuality(transcode_info.stream_audio_bitrate)
+    : 'N/A'
 
+  const none = 'N/A'
   const caption =
     `🚨 <strong>${title} - Transcoding alert</strong> 🚨\n\n` +
     `👤 <strong>Usuario:</strong> ${user}\n` +
     `🔄 <strong>Acción:</strong> ${action}\n` +
     `▶️ <strong>Reproductor:</strong> ${player}\n` +
+    `📦 <strong>Container:</strong> ${transcode_info.container} -> ${transcode_info.transcode_container}\n` +
+    `\n` +
     `🎬 <strong>Vídeo:</strong> ${transcode_info.video_decision} (${
-      transcode_info.video_codec ?? 'N/A'
-    } -> ${transcode_info.transcode_video_codec ?? 'N/A'})\n` +
+      transcode_info.video_codec ?? none
+    } ${transcode_info.video_resolution ?? none}` +
+    ` -> ${transcode_info.transcode_video_codec ?? none} ${
+      transcode_info.stream_video_resolution
+    })\n` +
     `🔊 <strong>Audio:</strong> ${transcode_info.audio_decision} (${
-      transcode_info.audio_codec ?? 'N/A'
-    } -> ${transcode_info.transcode_audio_codec ?? 'N/A'})\n` +
-    `📊 <strong>Calidad:</strong>\n` +
-    `      - Actual: ${actualQualityFormatted} (${transcode_info.stream_video_resolution})\n` +
-    `      - Original: ${originalQualityFormatted}\n` +
+      transcode_info.audio_codec ?? none
+    } -> ${transcode_info.transcode_audio_codec ?? none})\n` +
+    `🎬 <strong>Subtítulos:</strong> ${transcode_info.subtitle_decision} (${
+      transcode_info.subtitle_language ?? none
+    } - ${transcode_info.subtitle_codec ?? none}` +
+    ` ${
+      transcode_info.stream_subtitle_codec ? ' -> ' + transcode_info.stream_subtitle_codec : ''
+    })\n` +
+    `\n` +
+    `📊 <strong>Calidad (bitrate)</strong>\n` +
+    `       General:\n` +
+    `         - Actual: ${streamQualityFormatted}\n` +
+    `         - Original: ${originalQualityFormatted}\n` +
+    `       Vídeo:\n` +
+    `         - Actual: ${actualVideoQualityFormatted} (${transcode_info.stream_video_resolution})\n` +
+    `         - Original: ${originalVideoQualityFormatted} (${transcode_info.video_resolution})\n` +
+    `       Audio:\n` +
+    `         - Actual: ${actualAudioQualityFormatted}\n` +
+    `         - Original: ${originalAudioQualityFormatted}\n` +
     `\n\n` +
     `🔥 ¡El NAS está que arde! 🔥`
 

@@ -24,17 +24,31 @@ export interface SerieInfo {
 }
 
 export interface TranscodeInfo {
+  // Transcoding decition
   transcode_decision: string
   video_decision: string
   audio_decision: string
+  subtitle_decision: string
+  // Container info
   container: string
+  stream_container: string
   transcode_container: string
-  transcode_video_codec: string
+  // Codecs
   video_codec: string
-  transcode_audio_codec: string
+  transcode_video_codec: string
   audio_codec: string
-  quality: string
+  transcode_audio_codec: string
+  subtitle_codec: string
+  stream_subtitle_codec: string
+  subtitle_language: string
+  // Bitrate
   original_bitrate: string
-  stream_video_resolution: string
+  video_bitrate: string
+  audio_bitrate: string
+  stream_bitrate: string
   stream_video_bitrate: string
+  stream_audio_bitrate: string
+  // Resolution
+  video_resolution: string
+  stream_video_resolution: string
 }

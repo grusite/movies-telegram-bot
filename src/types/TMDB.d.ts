@@ -152,6 +152,41 @@ interface Season {
   vote_average: number
 }
 
+export interface TMDBCreditsResponse {
+  id: number
+  cast: Cast[]
+  crew: Crew[]
+}
+
+interface Cast {
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path?: string
+  cast_id: number
+  character: string
+  credit_id: string
+  order: number
+}
+
+interface Crew {
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path?: string
+  credit_id: string
+  department: string
+  job: string
+}
+
 export function isTMDBMovie(media: unknown): media is TMDbMovieDetailResponse {
   return (
     (media as TMDbMovieDetailResponse).title !== undefined &&
