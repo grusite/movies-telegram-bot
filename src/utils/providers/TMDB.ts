@@ -3,7 +3,8 @@ import type {
   TMDbMediaSearchResponse,
   TMDbMovieDetailResponse,
   TMDbSeriesDetailResponse,
-  TMDBCreditsResponse
+  TMDBCreditsResponse,
+  TMDBMovieReleaseDatesResponse
 } from '../../types/TMDB'
 import { logger } from '../logger.js'
 
@@ -124,6 +125,15 @@ export async function getTMDBInfoById(id: number, isMovie = true, console = true
   }
 }
 
+/**
+ * Retrieves the credits for a movie or TV show from The Movie Database (TMDb).
+ * 
+ * @param {number} id - The TMDb ID of the movie or TV show.
+ * @param {boolean} [isMovie=true] - Flag to indicate if the ID belongs to a movie (true) or TV show (false).
+ * @param {boolean} [console=true] - Flag to indicate if the function should log output to the console.
+ * @returns {Promise<{ id: number, cast: Array<Object> }>} An object containing the ID and an array of cast members.
+ * Each cast member includes details such as name, character played, and profile image path.
+ */
 export async function getTMDBCredits(id: number, isMovie = true, console = true) {
   const detailsUrl = `${baseUrl}/${
     isMovie ? 'movie' : 'tv'
@@ -142,4 +152,19 @@ export async function getTMDBCredits(id: number, isMovie = true, console = true)
       }
     }),
   }
+}
+
+/**
+ * Fetches release dates information for a movie from The Movie Database (TMDb).
+ * 
+ * @param {number} id - The TMDb ID of the movie.
+ * @param {boolean} [console=true] - Flag to indicate if the function should log output to the console.
+ * @returns {Promise<TMDBMovieReleaseDatesResponse>} An object containing the release dates information for the movie.
+ */
+export async function getTMDBMovieReleaseDates(id: number, console = true) {
+  const detailsUrl = `${baseUrl}/movie/${id}/release_dates?api_key=${API_KEY}&language=es-ES`
+  const detailsResponse = await axios.get<TMDBMovieReleaseDatesResponse>(detailsUrl)
+  console ? logger.info('TMDb Release Dates', detailsResponse.data) : null
+
+  return detailsResponse.data;
 }

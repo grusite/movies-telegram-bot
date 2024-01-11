@@ -1,6 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
 import { getIMDBInfoById, getIMDBInfoByTitleAndYear } from './utils/providers/IMDB.js'
-import { getTMDBInfoById, getTMDBInfoByTitleAndYear, getTMDBCredits } from './utils/providers/TMDB.js'
+import { getTMDBInfoById, getTMDBInfoByTitleAndYear, getTMDBMovieReleaseDates, getTMDBCredits } from './utils/providers/TMDB.js'
 import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook, formatQuality } from './utils/index.js'
 import { logger } from "./utils/logger.js";
 import type { OverseerrPayload } from "./types/overseerr.js"
@@ -127,6 +127,42 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
 
   try {
     if(!media || (!mediaInfo && !isMovie)) throw new Error(`No media info found for: ${subject}`)
+
+    // Check if the media is available in our country
+    if(notification_type !== 'MEDIA_AVAILABLE') {
+      const releaseDates = +media.tmdbId
+        ? await getTMDBMovieReleaseDates(+media!.tmdbId, false)
+        : undefined
+      if (releaseDates) {
+        const us = releaseDates.results.find((r) => r.iso_3166_1 === 'US')
+        const es = releaseDates.results.find((r) => r.iso_3166_1 === 'ES')
+
+        const cinemaUSRelease = us?.release_dates.find((d) => d.type === 3)
+        const cinemaESRelease = es?.release_dates.find((d) => d.type === 3)
+        const digitalUSRelease = us?.release_dates.find((d) => d.type === 4)
+        const digitalESRelease = es?.release_dates.find((d) => d.type === 4)
+
+        if (!cinemaUSRelease || !cinemaESRelease || !digitalESRelease ||!digitalUSRelease) {
+          const caption =
+            `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
+            `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
+              request?.requestedBy_username ?? 'alguien'
+            }</a> ha intentado adelantarse en el tiempo para descargar <strong>${subject}</strong>, pero aún no se ha estrenado.\n` +
+            `¡En cuanto se entrene el servidor la descargará automáticamente! 🚀\n\n` +
+            `🇪🇸 <strong>Fecha de lanzamiento:</strong>\n` +
+            `   Cines: ${cinemaESRelease?.release_date.split('T')[0]}\n` +
+            `   Digital: ${digitalESRelease?.release_date?.split('T')?.[0] ?? 'N/A'}\n` +
+            `🇺🇸 <strong>Fecha de lanzamiento:</strong>\n` +
+            `   Cines: ${cinemaUSRelease?.release_date.split('T')[0]}\n` +
+            `   Digital: ${digitalUSRelease?.release_date?.split('T')?.[0] ?? 'N/A'}\n`
+
+          await bot.sendPhoto(chatId, image, {
+            caption,
+            parse_mode: 'HTML',
+          })
+        }
+      }
+    }
 
     // Fetch IMDb and TMDb data for the movie
     const tmdbInfo = +media.tmdbId ? await getTMDBInfoById(+media.tmdbId, isMovie) : undefined;

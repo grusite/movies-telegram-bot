@@ -152,6 +152,23 @@ interface Season {
   vote_average: number
 }
 
+export function isTMDBMovie(media: unknown): media is TMDbMovieDetailResponse {
+  return (
+    (media as TMDbMovieDetailResponse).title !== undefined &&
+    (media as TMDbMovieDetailResponse).original_title !== undefined
+  )
+}
+
+export function isTMDBSeries(media: unknown): media is TMDbSeriesDetailResponse {
+  return (
+    (media as TMDbSeriesDetailResponse).name !== undefined &&
+    (media as TMDbSeriesDetailResponse).original_name !== undefined
+  )
+}
+
+
+
+
 export interface TMDBCreditsResponse {
   id: number
   cast: Cast[]
@@ -187,13 +204,37 @@ interface Crew {
   job: string
 }
 
-export function isTMDBMovie(media: unknown): media is TMDbMovieDetailResponse {
-  return (
-    (media as TMDbMovieDetailResponse).title !== undefined &&
-    (media as TMDbMovieDetailResponse).original_title !== undefined
-  )
+
+
+
+
+export interface TMDBMovieReleaseDatesResponse {
+  id: number
+  results: Result[]
 }
 
-export function isTMDBSeries(media: unknown): media is TMDbSeriesDetailResponse {
-  return (media as TMDbSeriesDetailResponse).name !== undefined && (media as TMDbSeriesDetailResponse).original_name!== undefined
+interface Result {
+  iso_3166_1: string
+  release_dates: ReleaseDate[]
 }
+
+interface ReleaseDate {
+  certification: string
+  descriptors: string[]
+  iso_639_1: string
+  note: string
+  release_date: string
+  type: number
+}
+
+/*
+Release	              | Type
+Premiere              | 1
+Theatrical (limited)	| 2
+Theatrical            | 3
+Digital	              | 4
+Physical              | 5
+TV                    | 6
+*/
+
+
