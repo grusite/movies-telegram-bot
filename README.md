@@ -254,24 +254,13 @@ Example of a Tautulli Last Episode notification:
   "player": "Jorges-MacBook-Pro.local",
   "action": "play",
   "media_type": "episode",
+  "themoviedb_id": "456",
   "serie_info": {
     "episode_name": "El blues de la Mona Lisa",
-    "episode_num": "6",
+    "episode_num": "13",
     "episode_count": "1",
     "season_num": "1",
     "season_count": "1"
-  },
-  "transcode_info": {
-    "transcode_decision": "Direct Play",
-    "video_decision": "direct play",
-    "audio_decision": "direct play",
-    "container": "mkv",
-    "transcode_container": "",
-    "transcode_video_codec": "",
-    "video_codec": "h264",
-    "transcode_audio_codec": "",
-    "audio_codec": "eac3",
-    "quality": "8689 kbps"
   }
 }
 ```

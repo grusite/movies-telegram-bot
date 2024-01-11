@@ -418,6 +418,16 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
           caption,
           parse_mode: 'HTML',
         })
+
+        const pollQuestion = `¿Qué hacemos con la temporada ${serie_info.season_num} de ${
+          title.split('-')[0]
+        }ahora que ${user} se la ha zampado entera?`
+        const pollOptions = [
+          'Borrarla y hacer espacio para más series 🚀',
+          'Guardarla para un maratón nostálgico 🍿',
+          'Dejar que decida el destino 🌌',
+        ]
+        await bot.sendPoll(chatId, pollQuestion, pollOptions)
       } else {
          throw new Error('No es el último episodio')
       }
