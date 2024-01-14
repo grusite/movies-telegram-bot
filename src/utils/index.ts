@@ -86,3 +86,23 @@ export function formatQuality(qualityInKbps: string) {
     return qualityInKbpsNum + ' Kbps';
   }
 }
+
+/**
+ * Formats a date object into a specified string format.
+ * 
+ * @param {Date} date - The date object to be formatted.
+ * @param {string} [language='es-ES'] - The locale to use for formatting the date. Defaults to 'es-ES'.
+ * @returns {string} The formatted date string.
+ * 
+ * @example
+ * // returns "20 ene. 2024" for Spanish locale
+ * formatDate(new Date('2024-01-20'));
+ * 
+ * @example
+ * // returns "Jan 20, 2024" for English (US) locale
+ * formatDate(new Date('2024-01-20'), 'en-US');
+ */
+export function formatDate(date: Date, language = 'es-ES') {
+  const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' }
+  return date.toLocaleDateString(language, options).replace(/ /g, ' ')
+}

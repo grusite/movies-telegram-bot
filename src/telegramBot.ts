@@ -1,7 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import { getIMDBInfoById, getIMDBInfoByTitleAndYear } from './utils/providers/IMDB.js'
 import { getTMDBInfoById, getTMDBInfoByTitleAndYear, getTMDBMovieReleaseDates, getTMDBCredits } from './utils/providers/TMDB.js'
-import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook, formatQuality } from './utils/index.js'
+import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook, formatQuality, formatDate } from './utils/index.js'
 import { logger } from "./utils/logger.js";
 import type { OverseerrPayload } from "./types/overseerr.js"
 import type { TautulliTranscodingNotificationPayload, TautulliLastEpisodeNotificationPayload } from './types/tautulli.js'
@@ -142,24 +142,53 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         const digitalUSRelease = us?.release_dates.find((d) => d.type === 4)
         const digitalESRelease = es?.release_dates.find((d) => d.type === 4)
 
-        if (!cinemaUSRelease || !cinemaESRelease || !digitalESRelease || !digitalUSRelease) {
+        const today = new Date()
+
+        if (
+          !cinemaUSRelease ||
+          !cinemaESRelease ||
+          !digitalESRelease ||
+          !digitalUSRelease ||
+          today.getTime() < new Date(cinemaUSRelease.release_date).getTime() ||
+          today.getTime() < new Date(cinemaESRelease.release_date).getTime() ||
+          today.getTime() < new Date(digitalESRelease.release_date).getTime() ||
+          today.getTime() < new Date(digitalUSRelease.release_date).getTime()
+        ) {
           const caption =
             `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
             `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
               request?.requestedBy_username ?? 'alguien'
             }</a> ha intentado adelantarse en el tiempo para descargar <strong>${subject}</strong>, pero aún no se ha estrenado.\n` +
-            `¡En cuanto se entrene el servidor la descargará automáticamente! 🚀\n\n` +
-            `🇪🇸 <strong>Fecha de lanzamiento:</strong>\n` +
-            `   Cines: ${cinemaESRelease?.release_date.split('T')[0]}\n` +
-            `   Digital: ${digitalESRelease?.release_date?.split('T')?.[0] ?? 'N/A'}\n` +
-            `🇺🇸 <strong>Fecha de lanzamiento:</strong>\n` +
-            `   Cines: ${cinemaUSRelease?.release_date.split('T')[0]}\n` +
-            `   Digital: ${digitalUSRelease?.release_date?.split('T')?.[0] ?? 'N/A'}\n`
+            `¡En cuanto se entrene en digital en España, el servidor la descargará automáticamente! 🚀\n\n` +
+            `🇪🇸 <strong>Fecha de lanzamiento (ES) :</strong>\n` +
+            `   Cines: ${
+              cinemaESRelease?.release_date
+                ? formatDate(new Date(cinemaESRelease?.release_date))
+                : 'No disponible'
+            }\n` +
+            `   Digital: ${
+              digitalESRelease?.release_date
+                ? formatDate(new Date(digitalESRelease?.release_date))
+                : 'No disponible'
+            }\n` +
+            `🇺🇸 <strong>Fecha de lanzamiento (US) :</strong>\n` +
+            `   Cines: ${
+              cinemaUSRelease?.release_date
+                ? formatDate(new Date(cinemaUSRelease?.release_date))
+                : 'No disponible'
+            }\n` +
+            `   Digital: ${
+              digitalUSRelease?.release_date
+                ? formatDate(new Date(digitalUSRelease?.release_date))
+                : 'No disponible'
+            }\n`
 
           await bot.sendPhoto(chatId, image, {
             caption,
             parse_mode: 'HTML',
           })
+
+          return;
         }
       }
     }
