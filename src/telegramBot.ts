@@ -129,7 +129,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     if(!media || (!mediaInfo && !isMovie)) throw new Error(`No media info found for: ${subject}`)
 
     // Check if the media is available in our country
-    if(notification_type !== 'MEDIA_AVAILABLE') {
+    if (notification_type === 'MEDIA_PENDING') {
       const releaseDates = +media.tmdbId
         ? await getTMDBMovieReleaseDates(+media!.tmdbId, false)
         : undefined
@@ -141,18 +141,16 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         const cinemaESRelease = es?.release_dates.find((d) => d.type === 3)
         const digitalUSRelease = us?.release_dates.find((d) => d.type === 4)
         const digitalESRelease = es?.release_dates.find((d) => d.type === 4)
+        logger.overseerrMedia(`US cinema release date: ${cinemaUSRelease?.release_date}`)
+        logger.overseerrMedia(`ES cinema release date: ${cinemaESRelease?.release_date}`)
+        logger.overseerrMedia(`US cigital release date: ${digitalUSRelease?.release_date}`)
+        logger.overseerrMedia(`ES cigital release date: ${digitalESRelease?.release_date}`)
 
         const today = new Date()
 
         if (
-          !cinemaUSRelease ||
-          !cinemaESRelease ||
           !digitalESRelease ||
-          !digitalUSRelease ||
-          today.getTime() < new Date(cinemaUSRelease.release_date).getTime() ||
-          today.getTime() < new Date(cinemaESRelease.release_date).getTime() ||
-          today.getTime() < new Date(digitalESRelease.release_date).getTime() ||
-          today.getTime() < new Date(digitalUSRelease.release_date).getTime()
+          today.getTime() < new Date(digitalESRelease.release_date).getTime()
         ) {
           const caption =
             `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
@@ -188,7 +186,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
             parse_mode: 'HTML',
           })
 
-          return;
+          return
         }
       }
     }
