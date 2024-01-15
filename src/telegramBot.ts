@@ -129,7 +129,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     if(!media || (!mediaInfo && !isMovie)) throw new Error(`No media info found for: ${subject}`)
 
     // Check if the media is available in our country
-    if (notification_type === 'MEDIA_PENDING') {
+    if (notification_type !== 'MEDIA_AVAILABLE' && media.media_type === 'movie') {
       const releaseDates = +media.tmdbId
         ? await getTMDBMovieReleaseDates(+media!.tmdbId, false)
         : undefined

@@ -1,5 +1,5 @@
 export interface OverseerrPayload {
-  notification_type: 'MEDIA_PENDING' | 'MEDIA_AVAILABLE' | 'ISSUE_COMMENT' // There are more unknown types
+  notification_type: 'MEDIA_PENDING' | 'MEDIA_AVAILABLE' | 'MEDIA_AUTO_APPROVED' | 'ISSUE_COMMENT' // There are more unknown types
   event: string
   subject: string
   message: string
