@@ -124,7 +124,7 @@ npm start
 
 * **/webhook/overseerr-media-notification:** Handles notifications from Overseerr about new media availability.
 
-Example of a TV Series POST notification from Overseerr:
+Example of a TV Series POST (MEDIA_AVAILABLE status) notification from Overseerr:
 
 ```json
 {
@@ -152,7 +152,7 @@ Example of a TV Series POST notification from Overseerr:
 }
 ```
 
-Example of a Movie POST notification from Overseerr:
+Example of a Movie POST (MEDIA_AVAILABLE status) notification from Overseerr:
 
 ```json
 {
@@ -173,6 +173,34 @@ Example of a Movie POST notification from Overseerr:
     "requestedBy_email": "drinconada@gmail.com",
     "requestedBy_username": "Gudnight",
     "requestedBy_avatar": "https://plex.tv/users/45eb1bbd0c2fb9b5/avatar?c=1703945653"
+  },
+  "issue": null,
+  "comment": null,
+  "extra": []
+}
+```
+
+Example of a non-released movie (MEDIA_PENDING status) POST notification from Overseerr:
+
+```json
+{
+  "notification_type": "MEDIA_PENDING",
+  "event": "New Movie Request",
+  "subject": "The Beekeeper (2024)",
+  "message": "One man’s campaign for vengeance takes on national stakes after he is revealed to be a former operative of a powerful and clandestine organization known as Beekeepers.",
+  "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/A7EByudX0eOzlkQ2FIbogzyazm2.jpg",
+  "media": {
+    "media_type": "movie",
+    "tmdbId": "866398",
+    "tvdbId": "",
+    "status": "PENDING",
+    "status4k": "UNKNOWN"
+  },
+  "request": {
+    "request_id": "269",
+    "requestedBy_email": "grusite@gmail.com",
+    "requestedBy_username": "grusite",
+    "requestedBy_avatar": "https://plex.tv/users/fe7fa4e4122d2d86/avatar?c=1704938280"
   },
   "issue": null,
   "comment": null,
