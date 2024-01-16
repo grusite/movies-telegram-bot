@@ -46,7 +46,6 @@ export async function getIMDBInfoById(id: string) {
     return null
   } catch (error) {
     logger.error('Error fetching data from IMDb:', error)
-    throw error
   }
 }
 
@@ -109,6 +108,5 @@ export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
     return null
   } catch (error) {
     logger.error('Error fetching data from IMDb:', error)
-    throw error
   }
 }

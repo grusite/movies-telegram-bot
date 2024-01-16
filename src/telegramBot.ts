@@ -1,6 +1,12 @@
 import TelegramBot from "node-telegram-bot-api";
 import { getIMDBInfoById, getIMDBInfoByTitleAndYear } from './utils/providers/IMDB.js'
-import { getTMDBInfoById, getTMDBInfoByTitleAndYear, getTMDBMovieReleaseDates, getTMDBCredits } from './utils/providers/TMDB.js'
+import {
+  getTMDBInfoById,
+  getTMDBInfoByTitleAndYear,
+  fetchMovieNonAvailableReleasedDates,
+  fetchTVSeasonEpisodeNoneReleased,
+  getTMDBCredits,
+} from './utils/providers/TMDB.js'
 import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFromOverseerWebhook, formatQuality, formatDate } from './utils/index.js'
 import { logger } from "./utils/logger.js";
 import type { OverseerrPayload } from "./types/overseerr.js"
@@ -129,66 +135,74 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     if(!media || (!mediaInfo && !isMovie)) throw new Error(`No media info found for: ${subject}`)
 
     // Check if the media is available in our country
-    if (notification_type !== 'MEDIA_AVAILABLE' && media.media_type === 'movie') {
-      const releaseDates = +media.tmdbId
-        ? await getTMDBMovieReleaseDates(+media!.tmdbId, false)
-        : undefined
-      if (releaseDates) {
-        const us = releaseDates.results.find((r) => r.iso_3166_1 === 'US')
-        const es = releaseDates.results.find((r) => r.iso_3166_1 === 'ES')
+    if (notification_type !== 'MEDIA_AVAILABLE') {
+      let caption: string = '';
 
-        const cinemaUSRelease = us?.release_dates.find((d) => d.type === 3)
-        const cinemaESRelease = es?.release_dates.find((d) => d.type === 3)
-        const digitalUSRelease = us?.release_dates.find((d) => d.type === 4)
-        const digitalESRelease = es?.release_dates.find((d) => d.type === 4)
-        logger.overseerrMedia(`US cinema release date: ${cinemaUSRelease?.release_date}`)
-        logger.overseerrMedia(`ES cinema release date: ${cinemaESRelease?.release_date}`)
-        logger.overseerrMedia(`US cigital release date: ${digitalUSRelease?.release_date}`)
-        logger.overseerrMedia(`ES cigital release date: ${digitalESRelease?.release_date}`)
+      if(media.media_type === 'movie') {
 
-        const today = new Date()
-
-        if (
-          !digitalESRelease ||
-          today.getTime() < new Date(digitalESRelease.release_date).getTime()
-        ) {
-          const caption =
+        const releaseDates = +media.tmdbId ? await fetchMovieNonAvailableReleasedDates(+media.tmdbId, "cinema") : undefined;
+        if(releaseDates) {
+          caption =
             `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
             `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
               request?.requestedBy_username ?? 'alguien'
             }</a> ha intentado adelantarse en el tiempo para descargar <strong>${subject}</strong>, pero aún no se ha estrenado.\n` +
-            `¡En cuanto se entrene en digital en España, el servidor la descargará automáticamente! 🚀\n\n` +
-            `🇪🇸 <strong>Fecha de lanzamiento (ES) :</strong>\n` +
+            `¡En cuanto se entrene en <strong>digital en España</strong>, el servidor la descargará automáticamente! 🚀\n\n` +
+            `🇪🇸 <strong>Fecha de lanzamiento (ES)</strong>\n` +
             `   Cines: ${
-              cinemaESRelease?.release_date
-                ? formatDate(new Date(cinemaESRelease?.release_date))
+              releaseDates.cinemaESReleaseDate
+                ? formatDate(new Date(releaseDates.cinemaESReleaseDate))
                 : 'No disponible'
             }\n` +
             `   Digital: ${
-              digitalESRelease?.release_date
-                ? formatDate(new Date(digitalESRelease?.release_date))
+              releaseDates.digitalESReleaseDate
+                ? formatDate(new Date(releaseDates.digitalESReleaseDate))
                 : 'No disponible'
             }\n` +
-            `🇺🇸 <strong>Fecha de lanzamiento (US) :</strong>\n` +
+            `🇺🇸 <strong>Fecha de lanzamiento (US)</strong>\n` +
             `   Cines: ${
-              cinemaUSRelease?.release_date
-                ? formatDate(new Date(cinemaUSRelease?.release_date))
+              releaseDates.cinemaUSReleaseDate
+                ? formatDate(new Date(releaseDates.cinemaUSReleaseDate))
                 : 'No disponible'
             }\n` +
             `   Digital: ${
-              digitalUSRelease?.release_date
-                ? formatDate(new Date(digitalUSRelease?.release_date))
+              releaseDates.digitalUSReleaseDate
+                ? formatDate(new Date(releaseDates.digitalUSReleaseDate))
                 : 'No disponible'
             }\n`
-
-          await bot.sendPhoto(chatId, image, {
-            caption,
-            parse_mode: 'HTML',
-          })
-
-          return
         }
       }
+      else if (
+        media.media_type === 'tv' &&
+        extra?.[0]?.name === 'Requested Seasons' &&
+        extra?.[0]?.value
+      ) {
+        const data = +media.tmdbId
+          ? await fetchTVSeasonEpisodeNoneReleased(+media.tmdbId, +extra[0].value)
+          : undefined
+
+        if (data) {
+          caption =
+            `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
+            `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
+              request?.requestedBy_username ?? 'alguien'
+            }</a> ha intentado adelantarse en el tiempo al descargar la <strong>temporada ${
+              extra[0].value
+            }</strong> de la serie <strong>${subject}</strong>; parece que todavía no está 100% disponible.\n\n` +
+            `¡En cuanto se entrene la temporada entera el servidor la descargará automáticamente! 🚀\n\n` +
+            `<strong>📅 Fecha de lanzamiento</strong> del siguiente episodio:\n` +
+            `<strong>${data.episodeName} - ${formatDate(data.releaseDate)}</strong>\n`
+        }
+      }
+
+      if (caption) {
+        await bot.sendPhoto(chatId, image, {
+          caption,
+          parse_mode: 'HTML',
+        })
+      }
+
+      return;
     }
 
     // Fetch IMDb and TMDb data for the movie

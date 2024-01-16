@@ -172,7 +172,7 @@ export function isTMDBSeries(media: unknown): media is TMDbSeriesDetailResponse 
 export interface TMDBCreditsResponse {
   id: number
   cast: Cast[]
-  crew: Crew[]
+  crew: CreditCrew[]
 }
 
 interface Cast {
@@ -190,7 +190,7 @@ interface Cast {
   order: number
 }
 
-interface Crew {
+interface CreditCrew {
   adult: boolean
   gender: number
   id: number
@@ -236,5 +236,64 @@ Digital	              | 4
 Physical              | 5
 TV                    | 6
 */
+
+
+export interface TMDBReleaseEpisodesResponse {
+  _id: string
+  air_date: string
+  episodes: Episode[]
+  name: string
+  overview: string
+  id: number
+  poster_path: string
+  season_number: number
+  vote_average: number
+}
+
+export interface Episode {
+  air_date: string
+  episode_number: number
+  episode_type: string
+  id: number
+  name: string
+  overview: string
+  production_code: string
+  runtime?: number
+  season_number: number
+  show_id: number
+  still_path?: string
+  vote_average: number
+  vote_count: number
+  crew: EpisodeCrew[]
+  guest_stars: GuestStar[]
+}
+
+export interface EpisodeCrew {
+  job: string
+  department: string
+  credit_id: string
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path?: string
+}
+
+export interface GuestStar {
+  character: string
+  credit_id: string
+  order: number
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path?: string
+}
 
 

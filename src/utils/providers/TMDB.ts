@@ -4,7 +4,8 @@ import type {
   TMDbMovieDetailResponse,
   TMDbSeriesDetailResponse,
   TMDBCreditsResponse,
-  TMDBMovieReleaseDatesResponse
+  TMDBMovieReleaseDatesResponse,
+  TMDBReleaseEpisodesResponse
 } from '../../types/TMDB'
 import { logger } from '../logger.js'
 
@@ -71,7 +72,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
     }
     return null
   } catch (error) {
-    logger.error('Error fetching data from TMDb:', error)
+    logger.error('Error fetching info from TMDb:', error)
     throw error
   }
 }
@@ -84,44 +85,49 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
  * @returns {Promise<Object>} A promise that resolves to an object containing the title, genres, type, seriesInfo, cover image URL, plot, and rating from TMDb.
  */
 export async function getTMDBInfoById(id: number, isMovie = true, console = true) {
-  const detailsUrl = `${baseUrl}/${isMovie ? 'movie' : 'tv'}/${
-    id
-  }?api_key=${API_KEY}&language=es-ES`;
-  const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
-    detailsUrl
-  )
-  console ? logger.info('TMDb details', detailsResponse.data) : null;
-  
-  // TS guards to type it correctly
-  const mediaDetail = detailsResponse.data as TMDbMovieDetailResponse | TMDbSeriesDetailResponse;
+  try {
+    const detailsUrl = `${baseUrl}/${isMovie ? 'movie' : 'tv'}/${
+      id
+    }?api_key=${API_KEY}&language=es-ES`; 
 
-  return {
-    id,
-    imdbId: (mediaDetail as TMDbMovieDetailResponse).imdb_id,
-    title: {
-      original: isMovie
-        ? (mediaDetail as TMDbMovieDetailResponse).original_title
-        : (mediaDetail as TMDbSeriesDetailResponse).original_name,
-      translated: isMovie
-        ? (mediaDetail as TMDbMovieDetailResponse).title
-        : (mediaDetail as TMDbSeriesDetailResponse).name,
-      tagline: mediaDetail.tagline,
-    },
-    genres: mediaDetail.genres.map((g) => g.name),
-    type: isMovie ? 'película' : 'serie',
-    seasons: (mediaDetail as TMDbSeriesDetailResponse).seasons,
-    numberOfEpisodes: isMovie
-      ? undefined
-      : (mediaDetail as TMDbSeriesDetailResponse).number_of_episodes,
-    numberOfSeasons: isMovie
-      ? undefined
-      : (detailsResponse.data as TMDbSeriesDetailResponse).number_of_seasons,
-    coverImageUrl: `${imgOriginalPath}${mediaDetail.poster_path}`,
-    plot: mediaDetail.overview,
-    rating: {
-      total: Math.round(mediaDetail.vote_average * 10) / 10,
-      numVotes: mediaDetail.vote_count,
-    },
+    const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
+      detailsUrl
+    )
+    console ? logger.info('TMDb details', detailsResponse.data) : null;
+    
+    // TS guards to type it correctly
+    const mediaDetail = detailsResponse.data as TMDbMovieDetailResponse | TMDbSeriesDetailResponse;
+
+    return {
+      id,
+      imdbId: (mediaDetail as TMDbMovieDetailResponse).imdb_id,
+      title: {
+        original: isMovie
+          ? (mediaDetail as TMDbMovieDetailResponse).original_title
+          : (mediaDetail as TMDbSeriesDetailResponse).original_name,
+        translated: isMovie
+          ? (mediaDetail as TMDbMovieDetailResponse).title
+          : (mediaDetail as TMDbSeriesDetailResponse).name,
+        tagline: mediaDetail.tagline,
+      },
+      genres: mediaDetail.genres.map((g) => g.name),
+      type: isMovie ? 'película' : 'serie',
+      seasons: (mediaDetail as TMDbSeriesDetailResponse).seasons,
+      numberOfEpisodes: isMovie
+        ? undefined
+        : (mediaDetail as TMDbSeriesDetailResponse).number_of_episodes,
+      numberOfSeasons: isMovie
+        ? undefined
+        : (detailsResponse.data as TMDbSeriesDetailResponse).number_of_seasons,
+      coverImageUrl: `${imgOriginalPath}${mediaDetail.poster_path}`,
+      plot: mediaDetail.overview,
+      rating: {
+        total: Math.round(mediaDetail.vote_average * 10) / 10,
+        numVotes: mediaDetail.vote_count,
+      },
+    }
+  } catch (error) {
+    logger.error('Error fetching details from TMDb:', error)
   }
 }
 
@@ -135,22 +141,24 @@ export async function getTMDBInfoById(id: number, isMovie = true, console = true
  * Each cast member includes details such as name, character played, and profile image path.
  */
 export async function getTMDBCredits(id: number, isMovie = true, console = true) {
-  const detailsUrl = `${baseUrl}/${
-    isMovie ? 'movie' : 'tv'
-  }/${id}/credits?api_key=${API_KEY}&language=es-ES`
-  const detailsResponse = await axios.get<TMDBCreditsResponse>(
-    detailsUrl
-  )
-  console ? logger.info('TMDb credits', detailsResponse.data) : null
+  try {
+    const detailsUrl = `${baseUrl}/${
+      isMovie ? 'movie' : 'tv'
+    }/${id}/credits?api_key=${API_KEY}&language=es-ES`
+    const detailsResponse = await axios.get<TMDBCreditsResponse>(detailsUrl)
+    console ? logger.info('TMDb credits', detailsResponse.data) : null
 
-  return {
-    id,
-    cast: detailsResponse.data.cast.map((c) => {
-      return {
-        ...c,
-        profile_path: c.profile_path ? `${imgOriginalPath}${c.profile_path}` : null,
-      }
-    }),
+    return {
+      id,
+      cast: detailsResponse.data.cast.map((c) => {
+        return {
+          ...c,
+          profile_path: c.profile_path ? `${imgOriginalPath}${c.profile_path}` : null,
+        }
+      }),
+    }
+  } catch (error) {
+    logger.error('Error fetching credits from TMDb:', error)
   }
 }
 
@@ -162,9 +170,103 @@ export async function getTMDBCredits(id: number, isMovie = true, console = true)
  * @returns {Promise<TMDBMovieReleaseDatesResponse>} An object containing the release dates information for the movie.
  */
 export async function getTMDBMovieReleaseDates(id: number, console = true) {
-  const detailsUrl = `${baseUrl}/movie/${id}/release_dates?api_key=${API_KEY}&language=es-ES`
-  const detailsResponse = await axios.get<TMDBMovieReleaseDatesResponse>(detailsUrl)
-  console ? logger.info('TMDb Release Dates', detailsResponse.data) : null
+  try {
+    const detailsUrl = `${baseUrl}/movie/${id}/release_dates?api_key=${API_KEY}`
+    const detailsResponse = await axios.get<TMDBMovieReleaseDatesResponse>(detailsUrl)
+    console ? logger.info('TMDb Release Dates', detailsResponse.data) : null
 
-  return detailsResponse.data;
+    return detailsResponse.data
+  } catch (error) {
+    logger.error('Error fetching movie release dates from TMDb:', error)
+  }
+}
+
+export async function fetchMovieNonAvailableReleasedDates(
+  tmdbId: number,
+  type: 'cinema' | 'digital' = 'cinema',
+) {
+  try {
+    const releaseDates = tmdbId ? await getTMDBMovieReleaseDates(tmdbId, false) : undefined
+    if (releaseDates) {
+      const us = releaseDates.results.find((r) => r.iso_3166_1 === 'US')
+      const es = releaseDates.results.find((r) => r.iso_3166_1 === 'ES')
+
+      /*
+        Type 1 === Premiere
+        Type 2 === Cinema (limited)
+        Type 3 === Cinema
+        Type 4 === Digital
+        Type 5 === Physical
+        Type 6 === TV 
+      */
+      const cinemaUSRelease = us?.release_dates.find((d) => d.type === 3)
+      const cinemaESRelease = es?.release_dates.find((d) => d.type === 3)
+      const digitalUSRelease = us?.release_dates.find((d) => d.type === 4)
+      const digitalESRelease = es?.release_dates.find((d) => d.type === 4)
+      logger.overseerrMedia(`US cinema release date: ${cinemaUSRelease?.release_date}`)
+      logger.overseerrMedia(`ES cinema release date: ${cinemaESRelease?.release_date}`)
+      logger.overseerrMedia(`US cigital release date: ${digitalUSRelease?.release_date}`)
+      logger.overseerrMedia(`ES cigital release date: ${digitalESRelease?.release_date}`)
+
+      const today = new Date()
+
+      if(type === 'digital') {
+        if (
+          (!digitalUSRelease && !digitalESRelease) ||
+          (!!digitalUSRelease?.release_date && today < new Date(digitalUSRelease?.release_date)) ||
+          (!!digitalESRelease?.release_date && today < new Date(digitalESRelease?.release_date))
+        ) {
+          return {
+            cinemaUSReleaseDate: cinemaUSRelease?.release_date,
+            cinemaESReleaseDate: cinemaESRelease?.release_date,
+            digitalUSReleaseDate: digitalUSRelease?.release_date,
+            digitalESReleaseDate: digitalESRelease?.release_date,
+          }
+        }
+      }
+
+      // else cinema
+      if ((!cinemaUSRelease && !cinemaESRelease) || (!!cinemaUSRelease?.release_date && today < new Date(cinemaUSRelease?.release_date)) || (!!cinemaESRelease?.release_date && today < new Date(cinemaESRelease?.release_date))) {
+        return {
+          cinemaUSReleaseDate: cinemaUSRelease?.release_date,
+          cinemaESReleaseDate: cinemaESRelease?.release_date,
+          digitalUSReleaseDate: digitalUSRelease?.release_date,
+          digitalESReleaseDate: digitalESRelease?.release_date,
+        }
+      }
+    }
+  } catch (error) {
+    logger.error('Error checking if movie is fully available:', error)
+  }
+}
+
+export async function fetchTVSeasonEpisodeNoneReleased(tvId: number, seasonNumber: number) {
+  try {
+    const response = await axios.get<TMDBReleaseEpisodesResponse>(
+      `${baseUrl}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}&language=es-ES`
+    )
+
+    logger.overseerrMedia(
+      `${tvId} - TV Season ${seasonNumber} release date: ${response.data.air_date}`
+    )
+    
+    const season = response.data
+    const today = new Date()
+
+    for (let episode of season.episodes) {
+      const releaseDate = new Date(episode.air_date)
+      if (releaseDate > today) {
+        logger.overseerrMedia(
+          `Episode ${episode.episode_number} release date: ${releaseDate}`
+        )
+        return {
+          episodeNumber: episode.episode_number,
+          episodeName: episode.name,
+          releaseDate,
+        } 
+      }
+    }
+  } catch (error) {
+    logger.error('Error fetching season data:', error)
+  }
 }
