@@ -206,10 +206,10 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     }
 
     // Fetch IMDb and TMDb data for the movie
-    const tmdbInfo = +media.tmdbId ? await getTMDBInfoById(+media.tmdbId, isMovie) : undefined;
+    const tmdbInfo = +media.tmdbId ? await getTMDBInfoById(+media.tmdbId, isMovie, false) : undefined;
     const imdbInfo =
       isMovie && tmdbInfo?.imdbId
-        ? await getIMDBInfoById(tmdbInfo.imdbId)
+        ? await getIMDBInfoById(tmdbInfo.imdbId, false)
         : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year)
     const credits = +media.tmdbId ? await getTMDBCredits(+media.tmdbId, isMovie, false) : undefined;
 
@@ -232,7 +232,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       caption += `\n`
       caption += `<strong>${tmdbInfo.title?.tagline}</strong>\n`
       caption += `${
-        tmdbInfo.plot.length > 600 ? tmdbInfo.plot.slice(0, 600) + '...' : tmdbInfo.plot
+        tmdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 500) + '[...]' : tmdbInfo.plot
       }\n`
       caption += `\n`
 
@@ -446,7 +446,7 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
     if (media_type === 'movie') throw new Error('No es una serie')
 
     const tmdbInfo = themoviedb_id
-      ? await getTMDBInfoById(+themoviedb_id, false)
+      ? await getTMDBInfoById(+themoviedb_id, false, false)
       : undefined
 
     if(tmdbInfo) {
@@ -468,7 +468,7 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
           'Guardarla para un maratón nostálgico 🍿',
           'Dejar que decida el destino 🌌',
         ]
-        await bot.sendPoll(chatId, pollQuestion, pollOptions)
+        await bot.sendPoll(chatId, pollQuestion, pollOptions, { is_anonymous: false })
       } else {
          throw new Error('No es el último episodio')
       }
