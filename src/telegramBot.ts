@@ -139,37 +139,50 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       let caption: string = '';
 
       if(media.media_type === 'movie') {
-
-        const releaseDates = +media.tmdbId ? await fetchMovieNonAvailableReleasedDates(+media.tmdbId, "cinema") : undefined;
+        const releaseDates = +media.tmdbId ? await fetchMovieNonAvailableReleasedDates(+media.tmdbId) : undefined;
         if(releaseDates) {
           caption =
             `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
             `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
               request?.requestedBy_username ?? 'alguien'
             }</a> ha intentado adelantarse en el tiempo para descargar <strong>${subject}</strong>, pero aún no se ha estrenado.\n` +
-            `¡En cuanto se entrene en <strong>digital en España</strong>, el servidor la descargará automáticamente! 🚀\n\n` +
-            `🇪🇸 <strong>Fecha de lanzamiento (ES)</strong>\n` +
-            `   Cines: ${
-              releaseDates.cinemaESReleaseDate
-                ? formatDate(new Date(releaseDates.cinemaESReleaseDate))
-                : 'No disponible'
-            }\n` +
-            `   Digital: ${
-              releaseDates.digitalESReleaseDate
-                ? formatDate(new Date(releaseDates.digitalESReleaseDate))
-                : 'No disponible'
-            }\n` +
-            `🇺🇸 <strong>Fecha de lanzamiento (US)</strong>\n` +
-            `   Cines: ${
-              releaseDates.cinemaUSReleaseDate
-                ? formatDate(new Date(releaseDates.cinemaUSReleaseDate))
-                : 'No disponible'
-            }\n` +
-            `   Digital: ${
-              releaseDates.digitalUSReleaseDate
-                ? formatDate(new Date(releaseDates.digitalUSReleaseDate))
-                : 'No disponible'
-            }\n`
+            `¡En cuanto se entrene en <strong>digital en España</strong>, el servidor la descargará automáticamente! 🚀\n\n`
+
+          if(releaseDates.foreignCountry) {
+            caption +=
+              `<strong>Fecha de lanzamiento (${releaseDates.foreignCountry})</strong>\n` +
+              `   Cines: ${formatDate(new Date(releaseDates.cinemaReleaseDate))
+              }\n` +
+              `   Digital: ${
+                releaseDates.digitalReleaseDate
+                  ? formatDate(new Date(releaseDates.digitalReleaseDate))
+                  : 'No disponible'
+              }\n`
+          } else {
+            caption +=
+              `🇪🇸 <strong>Fecha de lanzamiento (ES)</strong>\n` +
+              `   Cines: ${
+                releaseDates.cinemaESReleaseDate
+                  ? formatDate(new Date(releaseDates.cinemaESReleaseDate))
+                  : 'No disponible'
+              }\n` +
+              `   Digital: ${
+                releaseDates.digitalESReleaseDate
+                  ? formatDate(new Date(releaseDates.digitalESReleaseDate))
+                  : 'No disponible'
+              }\n` +
+              `🇺🇸 <strong>Fecha de lanzamiento (US)</strong>\n` +
+              `   Cines: ${
+                releaseDates.cinemaUSReleaseDate
+                  ? formatDate(new Date(releaseDates.cinemaUSReleaseDate))
+                  : 'No disponible'
+              }\n` +
+              `   Digital: ${
+                releaseDates.digitalUSReleaseDate
+                  ? formatDate(new Date(releaseDates.digitalUSReleaseDate))
+                  : 'No disponible'
+              }\n`
+          }
         }
       }
       else if (
@@ -210,7 +223,10 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     const imdbInfo =
       isMovie && tmdbInfo?.imdbId
         ? await getIMDBInfoById(tmdbInfo.imdbId, false)
-        : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year)
+        : tmdbInfo?.title?.original
+          ? await getIMDBInfoByTitleAndYear(tmdbInfo.title.original, mediaInfo!.year)
+          : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year)
+
     const credits = +media.tmdbId ? await getTMDBCredits(+media.tmdbId, isMovie, false) : undefined;
 
     if (tmdbInfo) {
@@ -220,7 +236,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         mediaInfo!.year
       })</strong>\n`
       caption += `<strong>Géneros:</strong> ${tmdbInfo.genres.join(', ')}\n`
-      if (credits) {
+      if (credits && credits.cast && credits.cast.length > 0) {
         caption += `<strong>Reparto:</strong> <a href="${credits.cast[0].profile_path ?? '#'}">${
           credits.cast[0].name
         }</a> (${credits.cast[0].character}), <a href="${credits.cast[1].profile_path ?? '#'}">${

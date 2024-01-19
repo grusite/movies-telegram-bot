@@ -181,10 +181,7 @@ export async function getTMDBMovieReleaseDates(id: number, console = true) {
   }
 }
 
-export async function fetchMovieNonAvailableReleasedDates(
-  tmdbId: number,
-  type: 'cinema' | 'digital' = 'cinema',
-) {
+export async function fetchMovieNonAvailableReleasedDates(tmdbId: number) {
   try {
     const releaseDates = tmdbId ? await getTMDBMovieReleaseDates(tmdbId, false) : undefined
     if (releaseDates) {
@@ -205,33 +202,60 @@ export async function fetchMovieNonAvailableReleasedDates(
       const digitalESRelease = es?.release_dates.find((d) => d.type === 4)
       logger.overseerrMedia(`US cinema release date: ${cinemaUSRelease?.release_date}`)
       logger.overseerrMedia(`ES cinema release date: ${cinemaESRelease?.release_date}`)
-      logger.overseerrMedia(`US cigital release date: ${digitalUSRelease?.release_date}`)
-      logger.overseerrMedia(`ES cigital release date: ${digitalESRelease?.release_date}`)
+      logger.overseerrMedia(`US digital release date: ${digitalUSRelease?.release_date}`)
+      logger.overseerrMedia(`ES digital release date: ${digitalESRelease?.release_date}`)
+
+      // 1. Buscar fecha cines en US y ES. Si no existe busco fecha digital en ES y US, y si no existe tampoco entonces busco en todos los países y cojo la fecha temprana y lo pongo en el mensaje como la "original".
+      // 2. Si existe cines en US mirar si la fechas es pasada. Si existe y es pasada mensaje y si no es pasada miramos la de ES de cines y si existe (sino existe no hacemos nada) y no es pasada no hacemos nada, si es pasada mensaje. Sino existe en US entonces mirar en ES en cines y hacer lo mismo.
+      // 3. El digital ya no lo miramos salvo que como en el paso 1. no existan en cines en US y ES.
 
       const today = new Date()
 
-      if(type === 'digital') {
-        if (
-          (!digitalUSRelease && !digitalESRelease) ||
-          (!!digitalUSRelease?.release_date && today < new Date(digitalUSRelease?.release_date)) ||
-          (!!digitalESRelease?.release_date && today < new Date(digitalESRelease?.release_date))
-        ) {
-          return {
-            cinemaUSReleaseDate: cinemaUSRelease?.release_date,
-            cinemaESReleaseDate: cinemaESRelease?.release_date,
-            digitalUSReleaseDate: digitalUSRelease?.release_date,
-            digitalESReleaseDate: digitalESRelease?.release_date,
-          }
+      // 1. If there is a US cinema release date and today is before it, return the US/ES release dates
+      if(cinemaUSRelease && cinemaUSRelease.release_date && today < new Date(cinemaUSRelease.release_date)) {
+        return {
+          cinemaUSReleaseDate: cinemaUSRelease.release_date,
+          cinemaESReleaseDate: cinemaESRelease?.release_date,
+          digitalUSReleaseDate: digitalUSRelease?.release_date,
+          digitalESReleaseDate: digitalESRelease?.release_date,
         }
-      }
-
-      // else cinema
-      if ((!cinemaUSRelease && !cinemaESRelease) || (!!cinemaUSRelease?.release_date && today < new Date(cinemaUSRelease?.release_date)) || (!!cinemaESRelease?.release_date && today < new Date(cinemaESRelease?.release_date))) {
+      // 2. If US cinema doesn't exist or is previous than today then check the ES cinema release date
+      } else if(cinemaESRelease && cinemaESRelease.release_date && today < new Date(cinemaESRelease.release_date)) {
+        return {
+          cinemaUSReleaseDate: cinemaUSRelease?.release_date,
+          cinemaESReleaseDate: cinemaESRelease.release_date,
+          digitalUSReleaseDate: digitalUSRelease?.release_date,
+          digitalESReleaseDate: digitalESRelease?.release_date,
+        }
+      // 3. If ES cinema doesn't exist or is previous than today then check the US digital release date
+      } else if(digitalUSRelease && digitalUSRelease.release_date && today < new Date(digitalUSRelease.release_date)) {
+        return {
+          cinemaUSReleaseDate: cinemaUSRelease?.release_date,
+          cinemaESReleaseDate: cinemaESRelease?.release_date,
+          digitalUSReleaseDate: digitalUSRelease.release_date,
+          digitalESReleaseDate: digitalESRelease?.release_date,
+        }
+      // 4. If US digital doesn't exist or is previous than today then check the ES digital release date
+      } else if(digitalESRelease && digitalESRelease.release_date && today < new Date(digitalESRelease.release_date)) {
         return {
           cinemaUSReleaseDate: cinemaUSRelease?.release_date,
           cinemaESReleaseDate: cinemaESRelease?.release_date,
           digitalUSReleaseDate: digitalUSRelease?.release_date,
-          digitalESReleaseDate: digitalESRelease?.release_date,
+          digitalESReleaseDate: digitalESRelease.release_date,
+        }
+      // 5. If no US/ES release date is found then return the original country release date
+      } else if(!cinemaUSRelease && !cinemaESRelease && !digitalUSRelease && !digitalESRelease) {
+        for(const r of releaseDates.results) {
+          const foreignCountry = r.iso_3166_1;
+          const notReleasedDate = r.release_dates.find((d) => d.type === 3 && today < new Date(d.release_date));
+
+          if (notReleasedDate) {
+            return {
+              foreignCountry,
+              cinemaReleaseDate: notReleasedDate.release_date,
+              digitalReleaseDate: r.release_dates.find((d) => d.type === 4)?.release_date,
+            }
+          }
         }
       }
     }
