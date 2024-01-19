@@ -236,20 +236,30 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         mediaInfo!.year
       })</strong>\n`
       caption += `<strong>Géneros:</strong> ${tmdbInfo.genres.join(', ')}\n`
-      if (credits && credits.cast && credits.cast.length > 0) {
-        caption += `<strong>Reparto:</strong> <a href="${credits.cast[0].profile_path ?? '#'}">${
-          credits.cast[0].name
-        }</a> (${credits.cast[0].character}), <a href="${credits.cast[1].profile_path ?? '#'}">${
-          credits.cast[1].name
-        }</a> (${credits.cast[1].character}), <a href="${credits.cast[2].profile_path ?? '#'}">${
-          credits.cast[2].name
-        }</a> (${credits.cast[2].character})...\n`
+      if (credits && credits.cast && credits.cast.length ) {
+        caption += `<strong>Reparto: </strong>`;
+        for(const [index, cast] of credits.cast.entries()) {
+          caption += `<a href="${cast.profile_path ?? '#'}">${cast?.name}</a> (${cast?.character})`;
+          if(index === 2) {
+            caption += '...';
+            break;
+          }
+        }
+        caption += '\n'
       }
       caption += `\n`
       caption += `<strong>${tmdbInfo.title?.tagline}</strong>\n`
-      caption += `${
-        tmdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 500) + '[...]' : tmdbInfo.plot
-      }\n`
+      if(tmdbInfo.plot) {
+        caption += `${
+          tmdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 500) + '[...]' : tmdbInfo.plot
+        }\n`
+      } else if(imdbInfo && imdbInfo.plot) {
+        caption += `${
+          imdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 500) + '[...]' : imdbInfo.plot
+        }\n`
+      } else {
+        caption += `${message}\n`
+      }
       caption += `\n`
 
       /* Requested info */
