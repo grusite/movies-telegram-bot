@@ -244,6 +244,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
             caption += '...';
             break;
           }
+          caption += ', ';
         }
         caption += '\n'
       }
