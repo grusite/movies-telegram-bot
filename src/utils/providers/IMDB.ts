@@ -44,8 +44,9 @@ export async function getIMDBInfoById(id: string, console = true) {
       }
     }
     return null
-  } catch (error) {
-    logger.error('Error fetching data from IMDb:', error)
+  } catch (err) {
+    const error = err as Error
+    logger.error('Error fetching data from IMDb:', error.message)
   }
 }
 
@@ -106,7 +107,8 @@ export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
       }
     }
     return null
-  } catch (error) {
-    logger.error('Error fetching data from IMDb:', error)
+  } catch (err) {
+    const error = err as Error
+    logger.error('Error fetching data from IMDb:', error.message)
   }
 }

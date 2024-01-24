@@ -126,8 +126,9 @@ export async function getTMDBInfoById(id: number, isMovie = true, console = true
         numVotes: mediaDetail.vote_count,
       },
     }
-  } catch (error) {
-    logger.error('Error fetching details from TMDb:', error)
+  } catch (err) {
+    const error = err as Error
+    logger.error('Error fetching details from TMDb:', error.message)
   }
 }
 
@@ -157,8 +158,9 @@ export async function getTMDBCredits(id: number, isMovie = true, console = true)
         }
       }),
     }
-  } catch (error) {
-    logger.error('Error fetching credits from TMDb:', error)
+  } catch (err) {
+    const error = err as Error
+    logger.error('Error fetching credits from TMDb:', error.message)
   }
 }
 
@@ -176,8 +178,9 @@ export async function getTMDBMovieReleaseDates(id: number, console = true) {
     console ? logger.info('TMDb Release Dates', detailsResponse.data) : null
 
     return detailsResponse.data
-  } catch (error) {
-    logger.error('Error fetching movie release dates from TMDb:', error)
+  } catch (err) {
+    const error = err as Error
+    logger.error('Error fetching movie release dates from TMDb:', error.message)
   }
 }
 
@@ -259,38 +262,41 @@ export async function fetchMovieNonAvailableReleasedDates(tmdbId: number) {
         }
       }
     }
-  } catch (error) {
-    logger.error('Error checking if movie is fully available:', error)
+  } catch (err) {
+    const error = err as Error;
+    logger.error('Error checking if movie is fully available:', error.message)
   }
 }
 
-export async function fetchTVSeasonEpisodeNoneReleased(tvId: number, seasonNumber: number) {
+export async function fetchTVSeasonEpisodeNoneReleased(tvId: number, seasons: string[]) {
   try {
-    const response = await axios.get<TMDBReleaseEpisodesResponse>(
-      `${baseUrl}/tv/${tvId}/season/${seasonNumber}?api_key=${API_KEY}&language=es-ES`
-    )
+    for(const season of seasons) {
+      const response = await axios.get<TMDBReleaseEpisodesResponse>(
+        `${baseUrl}/tv/${tvId}/season/${+season}?api_key=${API_KEY}&language=es-ES`
+      )
 
-    logger.overseerrMedia(
-      `${tvId} - TV Season ${seasonNumber} release date: ${response.data.air_date}`
-    )
-    
-    const season = response.data
-    const today = new Date()
+      logger.overseerrMedia(
+        `${tvId} - TV Season ${season} release date: ${response.data.air_date}`
+      )
+      
+      const seasonInfo = response.data
+      const today = new Date()
 
-    for (let episode of season.episodes) {
-      const releaseDate = new Date(episode.air_date)
-      if (releaseDate > today) {
-        logger.overseerrMedia(
-          `Episode ${episode.episode_number} release date: ${releaseDate}`
-        )
-        return {
-          episodeNumber: episode.episode_number,
-          episodeName: episode.name,
-          releaseDate,
-        } 
+      for (let episode of seasonInfo.episodes) {
+        const releaseDate = new Date(episode.air_date)
+        if (releaseDate > today) {
+          logger.overseerrMedia(`Episode ${episode.episode_number} release date: ${releaseDate}`)
+          return {
+            season,
+            episodeNumber: episode.episode_number,
+            episodeName: episode.name,
+            releaseDate,
+          }
+        }
       }
     }
-  } catch (error) {
-    logger.error('Error fetching season data:', error)
+  } catch (err) {
+    const error = err as Error;
+    logger.error('Error fetching season data:', error.message)
   }
 }

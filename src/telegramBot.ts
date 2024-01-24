@@ -190,8 +190,9 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         extra?.[0]?.name === 'Requested Seasons' &&
         extra?.[0]?.value
       ) {
+        const seasons = extra[0].value.split(',');
         const data = +media.tmdbId
-          ? await fetchTVSeasonEpisodeNoneReleased(+media.tmdbId, +extra[0].value)
+          ? await fetchTVSeasonEpisodeNoneReleased(+media.tmdbId, seasons)
           : undefined
 
         if (data) {
@@ -200,7 +201,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
             `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
               request?.requestedBy_username ?? 'alguien'
             }</a> ha intentado adelantarse en el tiempo al descargar la <strong>temporada ${
-              extra[0].value
+              data.season
             }</strong> de la serie <strong>${subject}</strong>; parece que todavía no está 100% disponible.\n\n` +
             `¡En cuanto se entrene la temporada entera el servidor la descargará automáticamente! 🚀\n\n` +
             `<strong>📅 Fecha de lanzamiento</strong> del siguiente episodio:\n` +
