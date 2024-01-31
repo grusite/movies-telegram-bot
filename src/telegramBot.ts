@@ -277,9 +277,16 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         tmdbInfo.numberOfSeasons &&
         extra[0].name === 'Requested Seasons'
       ) {
-        caption += `<strong>Temporada/s descargada/s: </strong>${+extra[0].value!}\n`
-        caption += `<strong>Número de episodios: </strong>${tmdbInfo.numberOfEpisodes}\n`
-        caption += `<strong>Número de temporadas: </strong>${tmdbInfo.numberOfSeasons}\n`
+        const downloadedSeasons = extra[0].value!.split(', ');
+        const downloadedEpisodes = downloadedSeasons.map((season) => {
+          return tmdbInfo.seasons.find((s) => s.season_number === +season)?.episode_count;
+        });
+
+        caption += `\n`
+        caption += `<strong>Temporada/s descargada/s: </strong>${downloadedSeasons.join("-")}\n`
+        caption += `<strong>Episodios descargados: </strong>${downloadedEpisodes.join("-")}\n`
+        caption += `<strong>Número total de episodios: </strong>${tmdbInfo.numberOfEpisodes}\n`
+        caption += `<strong>Número total de temporadas: </strong>${tmdbInfo.numberOfSeasons}\n`
       }
       caption += `\n`
 
@@ -493,8 +500,8 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
         }ahora que ${user} se la ha zampado entera?`
         const pollOptions = [
           'Borrarla y hacer espacio para más series 🚀',
-          'Guardarla para un maratón nostálgico 🍿',
-          'Dejar que decida el destino 🌌',
+          'Guardarla, ya sea porque todavía no la he visto 👀 o porque me la quiero volver a ver en el futuro 🍿',
+          'Me la pela, que decida Damián 🔨',
         ]
         await bot.sendPoll(chatId, pollQuestion, pollOptions, { is_anonymous: false })
       } else {
