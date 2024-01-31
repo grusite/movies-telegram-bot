@@ -1,5 +1,9 @@
 import express from 'express'
-import { sendMessageFromOverseerrWebhook, sendTranscodingMessageFromTautulliWebhook, sendEndOfEpisodeMessageFromTautulliWebhook } from './telegramBot.js'
+import {
+  readAndSendAnnouncement, sendMessageFromOverseerrWebhook,
+  sendTranscodingMessageFromTautulliWebhook,
+  sendEndOfEpisodeMessageFromTautulliWebhook,
+} from './telegramBot.js'
 import { logger } from './utils/logger.js';
 import { OverseerrPayload } from './types/overseerr';
 import { TautulliTranscodingNotificationPayload, TautulliLastEpisodeNotificationPayload } from './types/tautulli'
@@ -15,6 +19,29 @@ app.get('/', (_req, res) => {
 
 app.get('/health', (_req, res) => {
   res.status(200).send('Monstruooo! Que todo ha ido bien ❤️')
+})
+
+app.post('/send-announcement', async (req, res) => {
+  const body: { text: string } = req.body
+  logger.overseerrMedia('Received announcement text to be sent: ', body)
+
+  try {
+    await readAndSendAnnouncement(process.env.TELEGRAM_MEDIA_CHAT_ID!, body.text)
+
+    return res.status(200).json({
+      message: 'Telegram message successfully sent',
+      chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
+      text: body.text,
+      error: null,
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Telegram message not sent',
+      chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
+      text: body.text,
+      error,
+    })
+  }
 })
 
 app.post('/webhook/overseerr-media-notification', async (req, res) => {

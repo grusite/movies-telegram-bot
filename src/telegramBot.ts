@@ -115,6 +115,31 @@ export async function readAndSendMessage(msg: TelegramBot.Message) {
 }
 
 /**
+ * Sends a formatted announcement message to a specified Telegram chat.
+ * 
+ * This function takes a text message, formats it with additional descriptive information and markdown for emphasis,
+ * and sends it to the provided Telegram chat ID.
+ * 
+ * @param {string} chatId - The Telegram chat ID where the announcement will be sent.
+ * @param {string} text - The text of the announcement.
+ * @throws Will throw an error if sending the message fails.
+ */
+export async function readAndSendAnnouncement(chatId: string, text: string) {
+  const formattedText =
+    `📣 *¡Anuncio para la comunidad!* 📣\n\n` +
+    `${text}\n\n` +
+    `🌟 *¡Manténganse al tanto para más novedades!* 🌟`
+
+  try {
+    await bot.sendMessage(chatId, formattedText, { parse_mode: 'Markdown' })
+    logger.overseerrMedia('Announcement sent: ', formattedText)
+  } catch (error) {
+    logger.error('Error sending announcement: ', error)
+    throw error
+  }
+}
+
+/**
  * Sends a message to a specified Telegram chat based on Overseerr webhook data.
  * 
  * This function processes Overseerr webhook payload, fetches additional information

@@ -49,10 +49,28 @@ export const printBrightBrightBgCyan = (s: string) => `\x1b[136m${s}\x1b[0m`;
 export const printBrightBrightBgWhite = (s: string) => `\x1b[137m${s}\x1b[0m`;
 
 export const logger = {
-  error: (message: string, extra?: unknown) => extra ? console.error(`${printRed('✖')} ${message}`, extra) : console.error(`${printRed('✖')} ${message}`),
-  info: (message: string, extra?: unknown) => extra ? console.info(`${printGreen('✔')} ${message}`, extra) : console.info(`${printGreen('✔')} ${message}`),
-  overseerrMedia: (message: string, extra?: unknown) => extra ? console.info(`${printBlue('🎥')} ${message}`, extra) : console.info(`${printBlue('🎥')} ${message}`),
-  tautulliTranscoding: (message: string, extra?: unknown) => extra ? console.info(`${printMagenta('🔥')} ${message}`, extra) : console.info(`${printMagenta('🔥')} ${message}`),
+  error: (message: string, extra?: unknown) =>
+    extra
+      ? console.error(`${printRed('✖')} ${message}`, extra)
+      : console.error(`${printRed('✖')} ${message}`),
+  info: (message: string, extra?: unknown) =>
+    extra
+      ? console.info(`${printGreen('✔')} ${message}`, extra)
+      : console.info(`${printGreen('✔')} ${message}`),
+  announcement: (message: string, extra?: unknown) =>
+    extra
+      ? console.info(`${printCyan('📣')} ${message}`, extra)
+      : console.info(`${printCyan('📣')} ${message}`),
+  overseerrMedia: (message: string, extra?: unknown) =>
+    extra
+      ? console.info(`${printBlue('🎥')} ${message}`, extra)
+      : console.info(`${printBlue('🎥')} ${message}`),
+  tautulliTranscoding: (message: string, extra?: unknown) =>
+    extra
+      ? console.info(`${printMagenta('🔥')} ${message}`, extra)
+      : console.info(`${printMagenta('🔥')} ${message}`),
   tuautlliLastEpisode: (message: string, extra?: unknown) =>
-    extra ? console.info(`${printYellow('📺')} ${message}`, extra) : console.info(`${printYellow('📺')} ${message}`),
+    extra
+      ? console.info(`${printYellow('📺')} ${message}`, extra)
+      : console.info(`${printYellow('📺')} ${message}`),
 }
