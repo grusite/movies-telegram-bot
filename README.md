@@ -10,6 +10,34 @@ This repository contains a Node.js application for a Telegram Bot designed to en
 - Telegram Bot Token
 - Overseerr and Tautulli setup for webhook integration
 
+Example of Overeer config JSON:
+
+```json
+{
+  "notification_type": "{{notification_type}}",
+  "event": "{{event}}",
+  "subject": "{{subject}}",
+  "message": "{{message}}",
+  "image": "{{image}}",
+  "media": {
+    "media_type": "{{media_type}}",
+    "tmdbId": "{{tmdbId}}",
+    "tvdbId": "{{tvdbId}}",
+    "status": "{{status}}",
+    "status4k": "{{status4k}}"
+  },
+  "request": {
+    "request_id": "{{request_id}}",
+    "requestedBy_email": "{{requestedBy_email}}",
+    "requestedBy_username": "{{requestedBy_username}}",
+    "requestedBy_avatar": "{{requestedBy_avatar}}"
+  },
+  "issue": "{{issue}}",
+  "comment": "{{comment}}",
+  "extra": "{{extra}}"
+}
+```
+
 Example of Tautulli config JSON to be sent for the serie and the transcoding:
 
 ```json
@@ -292,6 +320,15 @@ Example of a Tautulli Last Episode notification:
   }
 }
 ```
+* **/send-announcement:** Sends a notifciation to the "Películas" chat group and adds a "header" and a "footer" to be more visual.
+
+Example of payload:
+```json
+{
+  "text": "Qué pasa shavaleh! \n\nQue sepáis que a partir de ahora el *nombre de las carpetas cambiará* y todos tendréis *permisos* para lo que os salga del pito. \n\n¿Os parece bien?"
+}
+```
+
 
 ## Contributing
 
