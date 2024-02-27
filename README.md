@@ -10,7 +10,7 @@ This repository contains a Node.js application for a Telegram Bot designed to en
 - Telegram Bot Token
 - Overseerr and Tautulli setup for webhook integration
 
-Example of Overeer config JSON:
+Example of Overeer config JSON (**NOTE**: the default template was used in Overeer config, not a manual JSON as here, but I paste it here just in case):
 
 ```json
 {
