@@ -14,27 +14,39 @@ Example of Overeer config JSON (**NOTE**: the default template was used in Overe
 
 ```json
 {
-  "notification_type": "{{notification_type}}",
-  "event": "{{event}}",
-  "subject": "{{subject}}",
-  "message": "{{message}}",
-  "image": "{{image}}",
-  "media": {
-    "media_type": "{{media_type}}",
-    "tmdbId": "{{tmdbId}}",
-    "tvdbId": "{{tvdbId}}",
-    "status": "{{status}}",
-    "status4k": "{{status4k}}"
-  },
-  "request": {
-    "request_id": "{{request_id}}",
-    "requestedBy_email": "{{requestedBy_email}}",
-    "requestedBy_username": "{{requestedBy_username}}",
-    "requestedBy_avatar": "{{requestedBy_avatar}}"
-  },
-  "issue": "{{issue}}",
-  "comment": "{{comment}}",
-  "extra": "{{extra}}"
+    "notification_type": "{{notification_type}}",
+    "event": "{{event}}",
+    "subject": "{{subject}}",
+    "message": "{{message}}",
+    "image": "{{image}}",
+    "{{media}}": {
+        "media_type": "{{media_type}}",
+        "tmdbId": "{{media_tmdbid}}",
+        "tvdbId": "{{media_tvdbid}}",
+        "status": "{{media_status}}",
+        "status4k": "{{media_status4k}}"
+    },
+    "{{request}}": {
+        "request_id": "{{request_id}}",
+        "requestedBy_email": "{{requestedBy_email}}",
+        "requestedBy_username": "{{requestedBy_username}}",
+        "requestedBy_avatar": "{{requestedBy_avatar}}"
+    },
+    "{{issue}}": {
+        "issue_id": "{{issue_id}}",
+        "issue_type": "{{issue_type}}",
+        "issue_status": "{{issue_status}}",
+        "reportedBy_email": "{{reportedBy_email}}",
+        "reportedBy_username": "{{reportedBy_username}}",
+        "reportedBy_avatar": "{{reportedBy_avatar}}"
+    },
+    "{{comment}}": {
+        "comment_message": "{{comment_message}}",
+        "commentedBy_email": "{{commentedBy_email}}",
+        "commentedBy_username": "{{commentedBy_username}}",
+        "commentedBy_avatar": "{{commentedBy_avatar}}"
+    },
+    "{{extra}}": []
 }
 ```
 
