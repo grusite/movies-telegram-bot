@@ -547,7 +547,6 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
 ) {
   const { user, title, themoviedb_id, media_type, serie_info } = tautulliPayload
 
-  /* START - DB */
   // Check first if the user has already seen the last episode to avoid duplicate notifications
   const { data: hasAlreadySeenLastEpisode, error: selectError } = await supabaseInstance
     .from('media_info')
@@ -557,24 +556,10 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
     logger.tuautlliLastEpisode(`User ${user} has already seen the last episode`);
     throw new Error(`User ${user} has already seen the last episode`);
   };
-
-  // Insert data into DB to know which user has seen the last episode
-  const { error: insertError } = await supabaseInstance.from('media_info').insert([
-    {
-      user_name: user,
-      media_type: media_type === 'movie' ? 'movie' : 'tv_serie',
-      media_name: title,
-      media_season: +serie_info.season_num,
-      media_chapter: +serie_info.episode_num,
-      is_last_episode: true,
-    },
-  ])
-  if (selectError || insertError) {
-    const error = selectError || insertError
-    logger.error(error!.message)
-    throw error!.message
+  if (selectError) {
+    logger.error(selectError.message)
+    throw selectError.message
   }
-  /* END - DB */
 
   let caption =
     `🎬 <strong>¡Atención!</strong> 🎬\n\n` +
@@ -595,6 +580,24 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
       )
 
       if (isLastEpisode) {
+        /* START - DB INSERTION */
+        // Insert data into DB to know which user has seen the last episode
+        const { error: insertError } = await supabaseInstance.from('media_info').insert([
+          {
+            user_name: user,
+            media_type: 'tv_serie',
+            media_name: title,
+            media_season: +serie_info.season_num,
+            media_chapter: +serie_info.episode_num,
+            is_last_episode: true,
+          },
+        ])
+        if (insertError) {
+          logger.error(insertError.message)
+          throw insertError.message
+        }
+        /* END - DB INSERTION */
+
         await bot.sendPhoto(chatId, tmdbInfo.coverImageUrl, {
           caption,
           parse_mode: 'HTML',
