@@ -11,6 +11,8 @@ import { formatRatingNumber, extractMediaInfoFromOverseerBot, extractMediaInfoFr
 import { logger } from "./utils/logger.js";
 import type { OverseerrPayload } from "./types/overseerr.js"
 import type { TautulliTranscodingNotificationPayload, TautulliLastEpisodeNotificationPayload } from './types/tautulli.js'
+import { supabaseInstance } from './db/index.js'
+import { Database } from "./db/database.types.js";
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
 // bot.on('message', async (msg) => readAndSendMessage(msg))
@@ -163,9 +165,27 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
     if (notification_type !== 'MEDIA_AVAILABLE') {
       let caption: string = '';
 
-      if(media.media_type === 'movie') {
-        const releaseDates = +media.tmdbId ? await fetchMovieNonAvailableReleasedDates(+media.tmdbId) : undefined;
-        if(releaseDates) {
+      if (media.media_type === 'movie') {
+        /* START - DB INSERTION */
+        // Insert data into DB to know which user has asked for the media
+        const { error } = await supabaseInstance.from('media_info').insert([
+          {
+            user_name: request?.requestedBy_username || 'unknown',
+            media_type: isMovie ? 'movie' : 'tv_serie',
+            media_name: subject,
+            is_requested: true,
+          },
+        ])
+        if (error) {
+          logger.error(error.message)
+          throw error.message
+        }
+        /* END - DB INSERTION */
+
+        const releaseDates = +media.tmdbId
+          ? await fetchMovieNonAvailableReleasedDates(+media.tmdbId)
+          : undefined
+        if (releaseDates) {
           caption =
             `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
             `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
@@ -173,11 +193,10 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
             }</a> ha intentado adelantarse en el tiempo para descargar <strong>${subject}</strong>, pero aún no se ha estrenado.\n` +
             `¡En cuanto se entrene en <strong>digital en España</strong>, el servidor la descargará automáticamente! 🚀\n\n`
 
-          if(releaseDates.foreignCountry) {
+          if (releaseDates.foreignCountry) {
             caption +=
               `<strong>Fecha de lanzamiento (${releaseDates.foreignCountry})</strong>\n` +
-              `   Cines: ${formatDate(new Date(releaseDates.cinemaReleaseDate))
-              }\n` +
+              `   Cines: ${formatDate(new Date(releaseDates.cinemaReleaseDate))}\n` +
               `   Digital: ${
                 releaseDates.digitalReleaseDate
                   ? formatDate(new Date(releaseDates.digitalReleaseDate))
@@ -209,28 +228,44 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
               }\n`
           }
         }
-      }
-      else if (
+      } else if (
         media.media_type === 'tv' &&
         extra?.[0]?.name === 'Requested Seasons' &&
         extra?.[0]?.value
       ) {
-        const seasons = extra[0].value.split(',');
-        const data = +media.tmdbId
+        const seasons = extra[0].value.split(',')
+        /* START - DB INSERTION */
+        // Insert data into DB to know which user has asked for the media
+        const toInsert = seasons.map((season) => ({
+          user_name: request?.requestedBy_username || 'unknown',
+          media_type: isMovie ? 'movie' : 'tv_serie',
+          media_name: subject,
+          media_season: +season,
+          is_requested: true,
+        })) as Database['public']["Tables"]["media_info"]["Insert"][]
+
+        const { error } = await supabaseInstance.from('media_info').insert(toInsert)
+        if (error) {
+          logger.error(error.message)
+          throw error.message
+        }
+        /* END - DB INSERTION */
+
+        const seasonInfo = +media.tmdbId
           ? await fetchTVSeasonEpisodeNoneReleased(+media.tmdbId, seasons)
           : undefined
 
-        if (data) {
+        if (seasonInfo) {
           caption =
             `🎬 <strong>¡Alerta de Viaje en el Tiempo!</strong> 🕒\n\n` +
             `Parece que <a href="${request?.requestedBy_avatar ?? '#'}">${
               request?.requestedBy_username ?? 'alguien'
             }</a> ha intentado adelantarse en el tiempo al descargar la <strong>temporada ${
-              data.season
+              seasonInfo.season
             }</strong> de la serie <strong>${subject}</strong>; parece que todavía no está 100% disponible.\n\n` +
             `¡En cuanto se entrene la temporada entera el servidor la descargará automáticamente! 🚀\n\n` +
             `<strong>📅 Fecha de lanzamiento</strong> del siguiente episodio:\n` +
-            `<strong>${data.episodeName} - ${formatDate(data.releaseDate)}</strong>\n`
+            `<strong>${seasonInfo.episodeName} - ${formatDate(seasonInfo.releaseDate)}</strong>\n`
         }
       }
 
@@ -404,20 +439,36 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
   }
 }
 
-export async function sendTranscodingMessageFromTautulliWebhook(
+export async function sendTranscodingMessageFromTautulliWebhook(  
   chatId: string,
   tautulliPayload: TautulliTranscodingNotificationPayload
 ) {
   const { user, title, themoviedb_id, media_type, player, transcode_info, action } = tautulliPayload
 
-  if (transcode_info.transcode_decision === 'Direct Play') throw new Error("Direct Play");
+  /* START - DB INSERTION */
+  // Insert data into DB to know which user is transcoding
+  const { error } = await supabaseInstance.from('media_info').insert([
+    {
+      user_name: user,
+      media_type: media_type === 'movie' ? 'movie' : 'tv_serie',
+      media_name: title,
+      is_transcoding: true,
+    },
+  ])
+  if (error) {
+    logger.error(error.message)
+    throw error.message
+  }
+  /* END - DB INSERTION */
+
+  if (transcode_info.transcode_decision === 'Direct Play') throw new Error('Direct Play')
 
   const originalQualityFormatted = transcode_info.original_bitrate
     ? formatQuality(transcode_info.original_bitrate)
     : 'N/A'
   const streamQualityFormatted = transcode_info.stream_bitrate
-      ? formatQuality(transcode_info.stream_bitrate)
-      : 'N/A'
+    ? formatQuality(transcode_info.stream_bitrate)
+    : 'N/A'
   const originalVideoQualityFormatted = transcode_info.video_bitrate
     ? formatQuality(transcode_info.video_bitrate)
     : 'N/A'
@@ -496,6 +547,35 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
 ) {
   const { user, title, themoviedb_id, media_type, serie_info } = tautulliPayload
 
+  /* START - DB */
+  // Check first if the user has already seen the last episode to avoid duplicate notifications
+  const { data: hasAlreadySeenLastEpisode, error: selectError } = await supabaseInstance
+    .from('media_info')
+    .select('is_last_episode')
+    .eq('user_name', user)
+  if (hasAlreadySeenLastEpisode && hasAlreadySeenLastEpisode.length) {
+    logger.tuautlliLastEpisode(`User ${user} has already seen the last episode`);
+    throw new Error(`User ${user} has already seen the last episode`);
+  };
+
+  // Insert data into DB to know which user has seen the last episode
+  const { error: insertError } = await supabaseInstance.from('media_info').insert([
+    {
+      user_name: user,
+      media_type: media_type === 'movie' ? 'movie' : 'tv_serie',
+      media_name: title,
+      media_season: +serie_info.season_num,
+      media_chapter: +serie_info.episode_num,
+      is_last_episode: true,
+    },
+  ])
+  if (selectError || insertError) {
+    const error = selectError || insertError
+    logger.error(error!.message)
+    throw error!.message
+  }
+  /* END - DB */
+
   let caption =
     `🎬 <strong>¡Atención!</strong> 🎬\n\n` +
     `<strong>${user}</strong> está viendo el último episodio (${serie_info.episode_num}) de la temporada ${serie_info.season_num} de: ` +
@@ -505,16 +585,16 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
   try {
     if (media_type === 'movie') throw new Error('No es una serie')
 
-    const tmdbInfo = themoviedb_id
-      ? await getTMDBInfoById(+themoviedb_id, false, false)
-      : undefined
+    const tmdbInfo = themoviedb_id ? await getTMDBInfoById(+themoviedb_id, false, false) : undefined
 
-    if(tmdbInfo) {
+    if (tmdbInfo) {
       const isLastEpisode = tmdbInfo.seasons.some(
-        (season) => season.season_number === +serie_info.season_num && season.episode_count === +serie_info.episode_num
-      );
+        (season) =>
+          season.season_number === +serie_info.season_num &&
+          season.episode_count === +serie_info.episode_num
+      )
 
-      if(isLastEpisode) {
+      if (isLastEpisode) {
         await bot.sendPhoto(chatId, tmdbInfo.coverImageUrl, {
           caption,
           parse_mode: 'HTML',
@@ -530,7 +610,7 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
         ]
         await bot.sendPoll(chatId, pollQuestion, pollOptions, { is_anonymous: false })
       } else {
-         throw new Error('No es el último episodio')
+        throw new Error('No es el último episodio')
       }
     } else {
       throw new Error('No se encontró información de la temporada en TMDB')

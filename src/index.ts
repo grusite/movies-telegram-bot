@@ -64,7 +64,7 @@ app.post('/webhook/overseerr-media-notification', async (req, res) => {
       chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
       title: body.subject,
       notificationType: body.notification_type,
-      error,
+      error: (error as Error).message,
     })
   }
 })
@@ -89,7 +89,7 @@ app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
       chatId: process.env.TELEGRAM_TRANSCODING_CHAT_ID,
       title: body.title,
       user: body.user,
-      error,
+      error: (error as Error).message,
     })
   }
 });
@@ -114,7 +114,7 @@ app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
       chatId: process.env.TELEGRAM_LAST_EPISODE_CHAT_ID,
       title: body.title,
       user: body.user,
-      error,
+      error: (error as Error).message,
     })
   }
 })

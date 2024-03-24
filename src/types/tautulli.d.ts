@@ -11,7 +11,7 @@ export interface GeneralInfo {
   user: string
   player: string
   action: string
-  media_type: string
+  media_type: "movie" | "episode"
   themoviedb_id: string
 }
 
