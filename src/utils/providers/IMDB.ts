@@ -73,7 +73,7 @@ export async function getIMDBInfoByTitleAndYear(title: string, year: number) {
       url: `${baseUrl}/titles/search/title/${encodeURIComponent(title)}`,
       params: { exact: 'true', info: 'base_info' },
     })
-    logger.info('IMDd title search result', res.data)
+    // logger.info('IMDd title search result', res.data)
 
     // If the title is not found in IMDb, split the title into two parts and try again
     if (res.data && res.data.entries === 0) {

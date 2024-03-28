@@ -313,11 +313,11 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       caption += `<strong>${tmdbInfo.title?.tagline}</strong>\n`
       if(tmdbInfo.plot) {
         caption += `${
-          tmdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 500) + '[...]' : tmdbInfo.plot
+          tmdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 450) + '[...]' : tmdbInfo.plot
         }\n`
       } else if(imdbInfo && imdbInfo.plot) {
         caption += `${
-          imdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 500) + '[...]' : imdbInfo.plot
+          imdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 450) + '[...]' : imdbInfo.plot
         }\n`
       } else {
         caption += `${message}\n`
