@@ -446,19 +446,20 @@ export async function sendTranscodingMessageFromTautulliWebhook(
   const { user, title, themoviedb_id, media_type, player, transcode_info, action } = tautulliPayload
 
   /* START - DB INSERTION */
+  // Stopped since it was fulling the DB
   // Insert data into DB to know which user is transcoding
-  const { error } = await supabaseInstance.from('media_info').insert([
-    {
-      user_name: user,
-      media_type: media_type === 'movie' ? 'movie' : 'tv_serie',
-      media_name: title,
-      is_transcoding: true,
-    },
-  ])
-  if (error) {
-    logger.error(error.message)
-    throw error.message
-  }
+  // const { error } = await supabaseInstance.from('media_info').insert([
+  //   {
+  //     user_name: user,
+  //     media_type: media_type === 'movie' ? 'movie' : 'tv_serie',
+  //     media_name: title,
+  //     is_transcoding: true,
+  //   },
+  // ])
+  // if (error) {
+  //   logger.error(error.message)
+  //   throw error.message
+  // }
   /* END - DB INSERTION */
 
   if (transcode_info.transcode_decision === 'Direct Play') throw new Error('Direct Play')
