@@ -15,6 +15,9 @@ coverage
 # Dependency directory
 node_modules
 
+# nvm versions
+.nvmrc
+
 # Editors
 .idea
 *.iml

@@ -151,3 +151,149 @@ interface Season {
   season_number: number
   vote_average: number
 }
+
+export function isTMDBMovie(media: unknown): media is TMDbMovieDetailResponse {
+  return (
+    (media as TMDbMovieDetailResponse).title !== undefined &&
+    (media as TMDbMovieDetailResponse).original_title !== undefined
+  )
+}
+
+export function isTMDBSeries(media: unknown): media is TMDbSeriesDetailResponse {
+  return (
+    (media as TMDbSeriesDetailResponse).name !== undefined &&
+    (media as TMDbSeriesDetailResponse).original_name !== undefined
+  )
+}
+
+
+
+
+export interface TMDBCreditsResponse {
+  id: number
+  cast: Cast[]
+  crew: CreditCrew[]
+}
+
+interface Cast {
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path?: string
+  cast_id: number
+  character: string
+  credit_id: string
+  order: number
+}
+
+interface CreditCrew {
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path?: string
+  credit_id: string
+  department: string
+  job: string
+}
+
+
+
+
+
+export interface TMDBMovieReleaseDatesResponse {
+  id: number
+  results: Result[]
+}
+
+interface Result {
+  iso_3166_1: string
+  release_dates: ReleaseDate[]
+}
+
+interface ReleaseDate {
+  certification: string
+  descriptors: string[]
+  iso_639_1: string
+  note: string
+  release_date: string
+  type: number
+}
+
+/*
+Release	              | Type
+Premiere              | 1
+Theatrical (limited)	| 2
+Theatrical            | 3
+Digital	              | 4
+Physical              | 5
+TV                    | 6
+*/
+
+
+export interface TMDBReleaseEpisodesResponse {
+  _id: string
+  air_date: string
+  episodes: Episode[]
+  name: string
+  overview: string
+  id: number
+  poster_path: string
+  season_number: number
+  vote_average: number
+}
+
+export interface Episode {
+  air_date: string
+  episode_number: number
+  episode_type: string
+  id: number
+  name: string
+  overview: string
+  production_code: string
+  runtime?: number
+  season_number: number
+  show_id: number
+  still_path?: string
+  vote_average: number
+  vote_count: number
+  crew: EpisodeCrew[]
+  guest_stars: GuestStar[]
+}
+
+export interface EpisodeCrew {
+  job: string
+  department: string
+  credit_id: string
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path?: string
+}
+
+export interface GuestStar {
+  character: string
+  credit_id: string
+  order: number
+  adult: boolean
+  gender: number
+  id: number
+  known_for_department: string
+  name: string
+  original_name: string
+  popularity: number
+  profile_path?: string
+}
+
+
