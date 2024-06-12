@@ -203,10 +203,10 @@ export async function fetchMovieNonAvailableReleasedDates(tmdbId: number) {
       const cinemaESRelease = es?.release_dates.find((d) => d.type === 3)
       const digitalUSRelease = us?.release_dates.find((d) => d.type === 4)
       const digitalESRelease = es?.release_dates.find((d) => d.type === 4)
-      logger.overseerrMedia(`US cinema release date: ${cinemaUSRelease?.release_date}`)
-      logger.overseerrMedia(`ES cinema release date: ${cinemaESRelease?.release_date}`)
-      logger.overseerrMedia(`US digital release date: ${digitalUSRelease?.release_date}`)
-      logger.overseerrMedia(`ES digital release date: ${digitalESRelease?.release_date}`)
+      logger.info(`US cinema release date: ${cinemaUSRelease?.release_date}`)
+      logger.info(`ES cinema release date: ${cinemaESRelease?.release_date}`)
+      logger.info(`US digital release date: ${digitalUSRelease?.release_date}`)
+      logger.info(`ES digital release date: ${digitalESRelease?.release_date}`)
 
       // 1. Buscar fecha cines en US y ES. Si no existe busco fecha digital en ES y US, y si no existe tampoco entonces busco en todos los países y cojo la fecha temprana y lo pongo en el mensaje como la "original".
       // 2. Si existe cines en US mirar si la fechas es pasada. Si existe y es pasada mensaje y si no es pasada miramos la de ES de cines y si existe (sino existe no hacemos nada) y no es pasada no hacemos nada, si es pasada mensaje. Sino existe en US entonces mirar en ES en cines y hacer lo mismo.
@@ -275,7 +275,7 @@ export async function fetchTVSeasonEpisodeNoneReleased(tvId: number, seasons: st
         `${baseUrl}/tv/${tvId}/season/${+season}?api_key=${API_KEY}&language=es-ES`
       )
 
-      logger.overseerrMedia(
+      logger.info(
         `${tvId} - TV Season ${season} release date: ${response.data.air_date}`
       )
       
@@ -285,7 +285,7 @@ export async function fetchTVSeasonEpisodeNoneReleased(tvId: number, seasons: st
       for (let episode of seasonInfo.episodes) {
         const releaseDate = new Date(episode.air_date)
         if (releaseDate > today) {
-          logger.overseerrMedia(`Episode ${episode.episode_number} release date: ${releaseDate}`)
+          logger.info(`Episode ${episode.episode_number} release date: ${releaseDate}`)
           return {
             season,
             episodeNumber: episode.episode_number,

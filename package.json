@@ -2,7 +2,7 @@
   "name": "telegram-bot",
   "private": true,
   "version": "3.0.0",
-  "description": "Bot that will add the IMDB score into our NAS chat group",
+  "description": "Webhooks enpoints that uses a Telegram Bot that adds relevant media information (such as the IMDB score, transcoding, etc) into our Media Center Telegram chat groups",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -16,19 +16,21 @@
   "author": "Jorge Martin",
   "license": "ISC",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.8",
-    "@types/express": "^4.17.21",
-    "axios": "^1.6.2",
-    "express": "^4.18.2",
-    "node-telegram-bot-api": "^0.64.0"
+    "@supabase/supabase-js": "^2.43.4",
+    "axios": "^1.7.2",
+    "express": "^4.19.2",
+    "node-telegram-bot-api": "^0.66.0",
+    "winston": "^3.13.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "engines": {
     "node": ">=20.6.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.5",
-    "@types/node-telegram-bot-api": "^0.64.1",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.2",
+    "@types/node-telegram-bot-api": "^0.64.6",
+    "tsx": "^4.14.0",
+    "typescript": "^5.4.5"
   }
 }

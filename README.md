@@ -6,11 +6,11 @@ This repository contains a Node.js application for a Telegram Bot designed to en
 
 ## Requirements
 
-- Node.js (>=20.6.0)
+- Node.js (>=20)
 - Telegram Bot Token
 - Overseerr and Tautulli setup for webhook integration
 
-Example of Overeer config JSON (**NOTE**: the default template was used in Overeer config, not a manual JSON as here, but I paste it here just in case):
+Example of Overeer config JSON (**NOTE**: the default template was used in Overeer config, not a manual JSON as here, but I paste it here just as info):
 
 ```json
 {

@@ -28,15 +28,15 @@ const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
  * @throws Will throw an error if processing or fetching additional information fails.
  */
 export async function readAndSendMessage(msg: TelegramBot.Message) {
-  logger.overseerrMedia('Original message: ', msg)
+  logger.info('Original message: ', msg)
 
   if (!msg.text || typeof msg.text !== 'string') {
-    logger.overseerrMedia('Invalid message: ', msg)
+    logger.info('Invalid message: ', msg)
     return
   }
 
   const mediaInfo = extractMediaInfoFromOverseerBot(msg.text)
-  logger.overseerrMedia('Extracted movie info: ', mediaInfo)
+  logger.info('Extracted movie info: ', mediaInfo)
   if (mediaInfo) {
     try {
       // Fetch IMDb and TMDb data for the movie
@@ -134,7 +134,7 @@ export async function readAndSendAnnouncement(chatId: string, text: string) {
 
   try {
     await bot.sendMessage(chatId, formattedText, { parse_mode: 'Markdown' })
-    logger.overseerrMedia('Announcement sent: ', formattedText)
+    logger.info('Announcement sent: ', formattedText)
   } catch (error) {
     logger.error('Error sending announcement: ', error)
     throw error
@@ -156,7 +156,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
 
   const isMovie = media?.media_type === 'movie';
   const mediaInfo = extractMediaInfoFromOverseerWebhook(subject)
-  logger.overseerrMedia('Extracted media info: ', mediaInfo)
+  logger.info('Extracted media info: ', mediaInfo)
 
   try {
     if(!media || (!mediaInfo && !isMovie)) throw new Error(`No media info found for: ${subject}`)
@@ -554,7 +554,7 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
     .select('is_last_episode')
     .eq('user_name', user)
   if (hasAlreadySeenLastEpisode && hasAlreadySeenLastEpisode.length) {
-    logger.tuautlliLastEpisode(`User ${user} has already seen the last episode`);
+    logger.warn(`User ${user} has already seen the last episode`);
     throw new Error(`User ${user} has already seen the last episode`);
   };
   if (selectError) {
