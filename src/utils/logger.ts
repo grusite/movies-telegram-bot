@@ -1,8 +1,9 @@
 import winston from 'winston'
 import path from 'path'
 import DailyRotateFile from 'winston-daily-rotate-file'
+import { __dirname } from './node'
 
-const logDirectory = path.join(__dirname, 'logs')
+const logDirectory = path.join(__dirname(import.meta), '../../logs')
 
 export const logger = winston.createLogger({
   level: 'info',
