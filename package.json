@@ -2,7 +2,7 @@
   "name": "telegram-bot",
   "private": true,
   "version": "3.0.0",
-  "description": "Webhooks enpoints that uses a Telegram Bot that adds relevant media information (such as the IMDB score, transcoding, etc) into our Media Center Telegram chat groups",
+  "description": "Webhooks enpoints that uses a Telegram Bot to add relevant media information (such as the IMDB score, transcoding, etc) into our Media Center Telegram chat groups",
   "main": "index.js",
   "type": "module",
   "scripts": {
