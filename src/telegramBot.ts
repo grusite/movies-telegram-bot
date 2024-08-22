@@ -13,6 +13,7 @@ import type { OverseerrPayload } from "./types/overseerr.js"
 import type { TautulliTranscodingNotificationPayload, TautulliLastEpisodeNotificationPayload } from './types/tautulli.js'
 import { supabaseInstance } from './db/index.js'
 import { Database } from "./db/database.types.js";
+import { getFilmaffinittyInfoByQuery } from "./utils/providers/filmaffinity.js";
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
 // bot.on('message', async (msg) => readAndSendMessage(msg))
@@ -279,7 +280,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       return;
     }
 
-    // Fetch IMDb and TMDb data for the movie
+    // Fetch 3rd Party data for the movie
     const tmdbInfo = +media.tmdbId ? await getTMDBInfoById(+media.tmdbId, isMovie, false) : undefined;
     const imdbInfo =
       isMovie && tmdbInfo?.imdbId
@@ -287,6 +288,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         : tmdbInfo?.title?.original
           ? await getIMDBInfoByTitleAndYear(tmdbInfo.title.original, mediaInfo!.year)
           : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year)
+    const faInfo = isMovie ? (await getFilmaffinittyInfoByQuery(mediaInfo?.title!)): undefined;
 
     const credits = +media.tmdbId ? await getTMDBCredits(+media.tmdbId, isMovie, false) : undefined;
 
@@ -356,6 +358,11 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         caption += `    - <strong>IMDB</strong>: <strong>${
           imdbInfo.rating.total
         }/10</strong> <em>(${formatRatingNumber(imdbInfo.rating.numVotes)} votos)</em>\n`
+      }
+      if (faInfo && faInfo.rating?.total && faInfo.rating?.numVotes) {
+        caption += `    - <strong>Filmaffinity</strong>: <strong>${
+          faInfo.rating.total
+        }/10</strong> <em>(${formatRatingNumber(faInfo.rating.numVotes)} votos)</em>\n`
       }
       caption += `    - <strong>TMDB</strong>: <strong>${
         tmdbInfo.rating?.total ?? 0
