@@ -1,7 +1,7 @@
 import winston from 'winston'
 import path from 'path'
 import DailyRotateFile from 'winston-daily-rotate-file'
-import { __dirname } from './node'
+import { __dirname } from './node.js'
 
 const logDirectory = path.join(__dirname(import.meta), '../../logs')
 
