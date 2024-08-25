@@ -9,7 +9,7 @@
     "dev": "npm run gen-db-types && node --import tsx --env-file=.env --watch src/index.ts",
     "start": "node --env-file=.env dist/index.js",
     "start-ci": "node dist/index.js",
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "gen-db-types": "supabase gen types typescript --project-id jeyzgwyiukeytlpzmitk > ./src/db/database.types.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

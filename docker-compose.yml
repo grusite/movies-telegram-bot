@@ -1,0 +1,8 @@
+services:
+  media-bot:
+    build: .
+    ports:
+      - "3200:3000"
+    env_file:
+      - .env
+    restart: always
