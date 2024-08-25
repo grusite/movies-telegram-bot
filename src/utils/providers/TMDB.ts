@@ -72,7 +72,8 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
     }
     return null
   } catch (error) {
-    logger.error('Error fetching info from TMDb:', error)
+    logger.error('Error fetching info from TMDb: ', (error as Error).message)
+    logger.error(`Error fetching info from TMDb: \n\n ${error}`)
     throw error
   }
 }
@@ -84,7 +85,7 @@ export async function getTMDBInfoByTitleAndYear(title: string, year: number, isM
  * @param {boolean} isMovie - Indicates if the title is a movie (true) or series (false).
  * @returns {Promise<Object>} A promise that resolves to an object containing the title, genres, type, seriesInfo, cover image URL, plot, and rating from TMDb.
  */
-export async function getTMDBInfoById(id: number, isMovie = true, console = true) {
+export async function getTMDBInfoById(id: number, isMovie = true, logs = true) {
   try {
     const detailsUrl = `${baseUrl}/${isMovie ? 'movie' : 'tv'}/${
       id
@@ -93,7 +94,7 @@ export async function getTMDBInfoById(id: number, isMovie = true, console = true
     const detailsResponse = await axios.get<TMDbMovieDetailResponse | TMDbSeriesDetailResponse>(
       detailsUrl
     )
-    console ? logger.info('TMDb details', detailsResponse.data) : null;
+    logs ? logger.info('TMDb details', detailsResponse.data) : null;
     
     // TS guards to type it correctly
     const mediaDetail = detailsResponse.data as TMDbMovieDetailResponse | TMDbSeriesDetailResponse;
@@ -141,13 +142,13 @@ export async function getTMDBInfoById(id: number, isMovie = true, console = true
  * @returns {Promise<{ id: number, cast: Array<Object> }>} An object containing the ID and an array of cast members.
  * Each cast member includes details such as name, character played, and profile image path.
  */
-export async function getTMDBCredits(id: number, isMovie = true, console = true) {
+export async function getTMDBCredits(id: number, isMovie = true, logs = true) {
   try {
     const detailsUrl = `${baseUrl}/${
       isMovie ? 'movie' : 'tv'
     }/${id}/credits?api_key=${API_KEY}&language=es-ES`
     const detailsResponse = await axios.get<TMDBCreditsResponse>(detailsUrl)
-    console ? logger.info('TMDb credits', detailsResponse.data) : null
+    logs ? logger.info('TMDb credits', detailsResponse.data) : null
 
     return {
       id,
@@ -171,11 +172,11 @@ export async function getTMDBCredits(id: number, isMovie = true, console = true)
  * @param {boolean} [console=true] - Flag to indicate if the function should log output to the console.
  * @returns {Promise<TMDBMovieReleaseDatesResponse>} An object containing the release dates information for the movie.
  */
-export async function getTMDBMovieReleaseDates(id: number, console = true) {
+export async function getTMDBMovieReleaseDates(id: number, logs = true) {
   try {
     const detailsUrl = `${baseUrl}/movie/${id}/release_dates?api_key=${API_KEY}`
     const detailsResponse = await axios.get<TMDBMovieReleaseDatesResponse>(detailsUrl)
-    console ? logger.info('TMDb Release Dates', detailsResponse.data) : null
+    logs ? logger.info('TMDb Release Dates', detailsResponse.data) : null
 
     return detailsResponse.data
   } catch (err) {

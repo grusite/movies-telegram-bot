@@ -7,6 +7,7 @@ import {
 import { logger } from './utils/logger.js';
 import { OverseerrPayload } from './types/overseerr';
 import { TautulliTranscodingNotificationPayload, TautulliLastEpisodeNotificationPayload } from './types/tautulli'
+import { consoleLogger } from './utils/consoleLogger.js';
 
 const app = express();
 const port = process.env.PORT || 3000
@@ -23,7 +24,8 @@ app.get('/health', (_req, res) => {
 
 app.post('/send-announcement', async (req, res) => {
   const body: { text: string } = req.body
-  logger.info('/send-announcement', '📣 Received announcement text to be sent: ', body)
+  logger.info('/send-announcement')
+  consoleLogger.announcement('Received announcement text to be sent', body)
 
   try {
     await readAndSendAnnouncement(process.env.TELEGRAM_MEDIA_CHAT_ID!, body.text)
@@ -46,7 +48,8 @@ app.post('/send-announcement', async (req, res) => {
 
 app.post('/webhook/overseerr-media-notification', async (req, res) => {
   const body: OverseerrPayload = req.body
-  logger.info('/webhook/overseerr-media-notification', '🎥 Received webhook from Overseer: ', body)
+  logger.info('/webhook/overseerr-media-notification')
+  consoleLogger.overseerrMedia('Received webhook from Overseer', body)
 
   try {
     await sendMessageFromOverseerrWebhook(process.env.TELEGRAM_MEDIA_CHAT_ID!, body)
@@ -71,11 +74,8 @@ app.post('/webhook/overseerr-media-notification', async (req, res) => {
 
 app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
   const body: TautulliTranscodingNotificationPayload = req.body
-  logger.info(
-    '/webhook/tautulli-transcoding-notification',
-    '🔥 Received webhook from Tautulli Transcoding Notification: ',
-    body
-  )
+  logger.info('/webhook/tautulli-transcoding-notification')
+  consoleLogger.tautulliTranscoding('Received webhook from Tautulli Transcoding Notification', body)
 
   try {
     await sendTranscodingMessageFromTautulliWebhook(process.env.TELEGRAM_TRANSCODING_CHAT_ID!, body)
@@ -100,9 +100,9 @@ app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
 
 app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
   const body: TautulliLastEpisodeNotificationPayload = req.body
-  logger.info(
-    '/webhook/tautulli-last-episode-notification',
-    '📺 Received webhook from Tautulli Last Episode Notification: ',
+  logger.info('/webhook/tautulli-last-episode-notification')
+  consoleLogger.tuautlliLastEpisode(
+    'Received webhook from Tautulli Last Episode Notification',
     body
   )
 
@@ -132,10 +132,12 @@ app.listen(port, () => {
 })
 
 process.on('uncaughtException', (err) => {
-  logger.error('There was an uncaught error ', err)
+  logger.error(`There was an uncaught error \n\n ${err}`)
+  logger.error('There was an uncaught error ', (err as Error).message)
   process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, _promise) => {
+  logger.error(`Unhandled Rejection: \n\n ${reason}`)
   logger.error('Unhandled Rejection: ', (reason as Error).message)
 })

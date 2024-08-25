@@ -10,7 +10,7 @@ const baseUrl = 'https://moviesdatabase.p.rapidapi.com'
  * @param {string} id - The id of the media.
  * @returns {Promise<Object>} A promise that resolves to an object containing detailed information about the movie, including title, year, type, cover image URL, plot, and rating details (total rating and number of votes). If no data is found, it returns an object with null values for rating and number of votes.
  */
-export async function getIMDBInfoById(id: string, console = true) {
+export async function getIMDBInfoById(id: string, logs = true) {
   const options = {
     method: 'GET',
     headers: {
@@ -25,7 +25,7 @@ export async function getIMDBInfoById(id: string, console = true) {
       url: `${baseUrl}/titles/${id}`,
       params: { info: 'base_info' },
     })
-    console ? logger.info('IMDd id search result', res.data) : undefined
+    logs ? logger.info('IMDd id search result', res.data) : undefined
 
     if (res.data?.results && Object.keys(res.data.results).length > 0) {
       const imdbMovie = res.data.results as unknown as IMDbMedia;

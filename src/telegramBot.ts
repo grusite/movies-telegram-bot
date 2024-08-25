@@ -135,9 +135,10 @@ export async function readAndSendAnnouncement(chatId: string, text: string) {
 
   try {
     await bot.sendMessage(chatId, formattedText, { parse_mode: 'Markdown' })
-    logger.info('Announcement sent: ', formattedText)
+    logger.info(`Announcement sent: \n\n ${formattedText}`)
   } catch (error) {
-    logger.error('Error sending announcement: ', error)
+    logger.error('Error sending announcement: ', (error as Error).message)
+    logger.error(`Error sending announcement: \n\n ${error}`)
     throw error
   }
 }
@@ -288,7 +289,7 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
         : tmdbInfo?.title?.original
           ? await getIMDBInfoByTitleAndYear(tmdbInfo.title.original, mediaInfo!.year)
           : await getIMDBInfoByTitleAndYear(mediaInfo!.title, mediaInfo!.year)
-    const faInfo = isMovie ? (await getFilmaffinittyInfoByQuery(mediaInfo?.title!)): undefined;
+    const faInfo = isMovie ? (await getFilmaffinittyInfoByQuery(mediaInfo?.title!, false)): undefined;
 
     const credits = +media.tmdbId ? await getTMDBCredits(+media.tmdbId, isMovie, false) : undefined;
 
@@ -560,10 +561,11 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
     .from('media_info')
     .select('is_last_episode')
     .eq('user_name', user)
+
   if (hasAlreadySeenLastEpisode && hasAlreadySeenLastEpisode.length) {
-    logger.warn(`User ${user} has already seen the last episode`);
-    throw new Error(`User ${user} has already seen the last episode`);
-  };
+    logger.warn(`User ${user} has already seen the last episode`)
+    throw new Error(`User ${user} has already seen the last episode`)
+  }
   if (selectError) {
     logger.error(selectError.message)
     throw selectError.message

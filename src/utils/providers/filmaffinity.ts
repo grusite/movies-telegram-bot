@@ -12,15 +12,12 @@ import { logger } from '../logger.js'
  */
 export async function getFilmaffinittyInfoByQuery(query: string, logs = true) {
   try {
-    console.log({query});
     const res: FAApiResponse = await faparser.search({
       query,
       lang: 'en',
       type: faparser.TITLE,
       start: 0,
     })
-    console.log("RES: ")
-    console.log(res)
     logs ? logger.info('Fimaffinity search result', res) : undefined;
 
     if (res.count && Object.keys(res.result[0]).length > 0) {

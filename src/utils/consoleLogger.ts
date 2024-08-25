@@ -48,7 +48,7 @@ export const printBrightBrightBgMagenta = (s: string) => `\x1b[135m${s}\x1b[0m`
 export const printBrightBrightBgCyan = (s: string) => `\x1b[136m${s}\x1b[0m`
 export const printBrightBrightBgWhite = (s: string) => `\x1b[137m${s}\x1b[0m`
 
-export const logger = {
+export const consoleLogger = {
   error: (message: string, extra?: unknown) =>
     extra
       ? console.error(`${printRed('✖')} ${message}`, extra)
