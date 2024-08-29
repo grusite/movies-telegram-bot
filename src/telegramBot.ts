@@ -16,6 +16,16 @@ import { Database } from "./db/database.types.js";
 import { getFilmaffinittyInfoByQuery } from "./utils/providers/filmaffinity.js";
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN!, { polling: true })
+/* Code to get the ChatID of any group where my bot is added */
+// bot.on('message', (msg) => {
+//   const chatId = msg.chat.id
+//   console.log(`Chat ID: ${chatId}`)
+
+//   // Reply to the message with the chat ID
+//   // bot.sendMessage(chatId, `Chat ID: ${chatId}`)
+// })
+/* */
+
 // bot.on('message', async (msg) => readAndSendMessage(msg))
 
 /**
@@ -561,11 +571,13 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
     .from('media_info')
     .select('is_last_episode')
     .eq('user_name', user)
+    .eq('media_name', title)
 
-  if (hasAlreadySeenLastEpisode && hasAlreadySeenLastEpisode.length) {
+  if (hasAlreadySeenLastEpisode && hasAlreadySeenLastEpisode.length && hasAlreadySeenLastEpisode[0].is_last_episode === true) {
     logger.warn(`User ${user} has already seen the last episode`)
     throw new Error(`User ${user} has already seen the last episode`)
   }
+
   if (selectError) {
     logger.error(selectError.message)
     throw selectError.message
@@ -619,7 +631,7 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
         const pollOptions = [
           'Borrarla y hacer espacio para más series 🚀',
           'Guardarla, ya sea porque todavía no la he visto 👀 o porque me la quiero volver a ver en el futuro 🍿',
-          'Me la pela, que decida Damián 🔨',
+          'Me la pela, que decida el owner del servidor 🔨',
         ]
         await bot.sendPoll(chatId, pollQuestion, pollOptions, { is_anonymous: false })
       } else {
