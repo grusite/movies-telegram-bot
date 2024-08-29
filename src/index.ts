@@ -23,23 +23,31 @@ app.get('/health', (_req, res) => {
 })
 
 app.post('/send-announcement', async (req, res) => {
-  const body: { text: string } = req.body
+  const body: { text: string; server?: 'cerveperros' | 'skylate' } = req.body
   logger.info('/send-announcement')
   consoleLogger.announcement('Received announcement text to be sent', body)
 
+  const chatIdByServer = {
+    cerveperros: process.env.TELEGRAM_CVP_MEDIA_CHAT_ID!,
+    skylate: process.env.TELEGRAM_SKYLATE_MEDIA_CHAT_ID!,
+    default: process.env.TELEGRAM_TEST_MEDIA_CHAT_ID!,
+  }
+  const server: keyof typeof chatIdByServer = body.server ?? 'default'
+  const chatId = chatIdByServer[server] || chatIdByServer['default']
+
   try {
-    await readAndSendAnnouncement(process.env.TELEGRAM_MEDIA_CHAT_ID!, body.text)
+    await readAndSendAnnouncement(chatId, body.text)
 
     return res.status(200).json({
       message: 'Telegram message successfully sent',
-      chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
+      chatId,
       text: body.text,
       error: null,
     })
   } catch (error) {
     return res.status(500).json({
       message: 'Telegram message not sent',
-      chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
+      chatId,
       text: body.text,
       error,
     })
@@ -51,12 +59,20 @@ app.post('/webhook/overseerr-media-notification', async (req, res) => {
   logger.info('/webhook/overseerr-media-notification')
   consoleLogger.overseerrMedia('Received webhook from Overseer', body)
 
+  const chatIdByServer = {
+    cerveperros: process.env.TELEGRAM_CVP_MEDIA_CHAT_ID!,
+    skylate: process.env.TELEGRAM_SKYLATE_MEDIA_CHAT_ID!,
+    default: process.env.TELEGRAM_TEST_MEDIA_CHAT_ID!,
+  }
+  const server: keyof typeof chatIdByServer = body.server ?? 'default'
+  const chatId = chatIdByServer[server] || chatIdByServer['default']
+
   try {
-    await sendMessageFromOverseerrWebhook(process.env.TELEGRAM_MEDIA_CHAT_ID!, body)
+    sendMessageFromOverseerrWebhook(chatId, body)
 
     return res.status(200).json({
       message: 'Telegram message successfully sent',
-      chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
+      chatId,
       title: body.subject,
       notificationType: body.notification_type,
       error: null,
@@ -64,7 +80,7 @@ app.post('/webhook/overseerr-media-notification', async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: 'Telegram message not sent',
-      chatId: process.env.TELEGRAM_MEDIA_CHAT_ID,
+      chatId,
       title: body.subject,
       notificationType: body.notification_type,
       error: (error as Error).message,
@@ -77,12 +93,23 @@ app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
   logger.info('/webhook/tautulli-transcoding-notification')
   consoleLogger.tautulliTranscoding('Received webhook from Tautulli Transcoding Notification', body)
 
+  const chatIdByServer = {
+    cerveperros: process.env.TELEGRAM_CVP_TRANSCODING_CHAT_ID!,
+    skylate: process.env.TELEGRAM_SKYLATE_TRANSCODING_CHAT_ID!,
+    default: process.env.TELEGRAM_TEST_TRANSCODING_CHAT_ID!,
+  }
+  const server: keyof typeof chatIdByServer = body.server ?? 'default'
+  const chatId = chatIdByServer[server] || chatIdByServer['default']
+
   try {
-    await sendTranscodingMessageFromTautulliWebhook(process.env.TELEGRAM_TRANSCODING_CHAT_ID!, body)
+    await sendTranscodingMessageFromTautulliWebhook(
+      chatId,
+      body
+    )
 
     return res.status(200).json({
       message: 'Telegram message successfully sent',
-      chatId: process.env.TELEGRAM_TRANSCODING_CHAT_ID,
+      chatId,
       title: body.title,
       user: body.user,
       error: null,
@@ -90,7 +117,7 @@ app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: 'Telegram message not sent',
-      chatId: process.env.TELEGRAM_TRANSCODING_CHAT_ID,
+      chatId,
       title: body.title,
       user: body.user,
       error: (error as Error).message,
@@ -106,12 +133,23 @@ app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
     body
   )
 
+  const chatIdByServer = {
+    cerveperros: process.env.TELEGRAM_CVP_LAST_EPISODE_CHAT_ID!,
+    skylate: process.env.TELEGRAM_SKYLATE_LAST_EPISODE_CHAT_ID!,
+    default: process.env.TELEGRAM_TEST_LAST_EPISODE_CHAT_ID!,
+  }
+  const server: keyof typeof chatIdByServer = body.server ?? 'default'
+  const chatId = chatIdByServer[server] || chatIdByServer['default']
+
   try {
-    await sendEndOfEpisodeMessageFromTautulliWebhook(process.env.TELEGRAM_LAST_EPISODE_CHAT_ID!, body)
+    await sendEndOfEpisodeMessageFromTautulliWebhook(
+      chatId,
+      body
+    )
 
     return res.status(200).json({
       message: 'Telegram message successfully sent',
-      chatId: process.env.TELEGRAM_LAST_EPISODE_CHAT_ID,
+      chatId,
       title: body.title,
       user: body.user,
       error: null,
@@ -119,7 +157,7 @@ app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: 'Telegram message not sent',
-      chatId: process.env.TELEGRAM_LAST_EPISODE_CHAT_ID,
+      chatId,
       title: body.title,
       user: body.user,
       error: (error as Error).message,

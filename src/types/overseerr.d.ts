@@ -1,4 +1,5 @@
 export interface OverseerrPayload {
+  server: 'cerveperros' | 'skylate'
   notification_type: 'MEDIA_PENDING' | 'MEDIA_AVAILABLE' | 'MEDIA_AUTO_APPROVED' | 'ISSUE_COMMENT' // There are more unknown types
   event: string
   subject: string

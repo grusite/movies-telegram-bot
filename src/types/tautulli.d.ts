@@ -7,6 +7,7 @@ export type TautulliLastEpisodeNotificationPayload = GeneralInfo & {
 }
 
 export interface GeneralInfo {
+  server: "cerveperros" | "skylate"
   title: string
   user: string
   player: string
