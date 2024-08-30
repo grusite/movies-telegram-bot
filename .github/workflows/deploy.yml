@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Pull latest code
       run: git pull origin main
@@ -19,10 +19,12 @@ jobs:
     - name: Build and Deploy
       run: |
         cd /home/grusite/repo/movies-telegram-bot
+        source ~/.zshrc
         git log -1
         ls -l
         whoami
-        pwd
+        touch /home/grusite/runner_executed.txt
+        echo "Running on $(hostname) as $(whoami)"
         alias nrd
         docker compose up --build -d
         docker image prune -f
