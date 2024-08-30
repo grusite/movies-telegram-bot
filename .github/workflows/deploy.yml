@@ -10,19 +10,10 @@ jobs:
     runs-on: self-hosted
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Pull latest code
-      run: git pull origin main
-
-    - name: Build and Deploy
+    - name: Pull latest code, Build and Deploy
       run: |
         cd /home/grusite/repo/movies-telegram-bot
-        git log -1
-        ls -l
-        whoami
-        touch /home/grusite/runner_executed.txt
+        git pull origin main
         echo "Running on $(hostname) as $(whoami)"
         docker compose up --build -d
         docker image prune -f
