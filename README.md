@@ -131,6 +131,24 @@ npm install
 npm run build
 ```
 
+## Deployment
+
+This project is configured to automatically deploy updates to the server whenever changes are pushed to the `main` branch. The deployment process is managed by GitHub Actions using a [self-hosted runner](https://github.com/grusite/movies-telegram-bot/settings/actions/runners) installed on the server. All the steps are added in the `deploy.yml` file.
+
+### Deployment Process
+
+1. **Push Changes:**
+  - Develop your features locally and push your changes to the `main` branch on GitHub.
+
+2. **GitHub Actions Workflow:**
+  - The self-hosted runner on the server detects the push event.
+  - It automatically pulls the latest code, rebuilds the Docker image, and restarts the containers.
+
+3. **Automatic Service Management:**
+  - The GitHub Actions runner is configured as a service on the server, ensuring it runs continuously and restarts automatically on server reboot.
+
+This setup automates the deployment process, ensuring that the latest code is always running on the server without manual intervention.
+
 ## Configuration
 
 1. Create a `.env` file in the root directory.
