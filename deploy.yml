@@ -1,0 +1,24 @@
+name: Deploy to JorgasServer
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Pull latest code
+      run: git pull origin main
+
+    - name: Build and Deploy
+      run: |
+        cd /home/grusite/repo/movies-telegram-bot
+        docker-compose up --build -d
+        docker image prune -f
+        docker container prune -f
