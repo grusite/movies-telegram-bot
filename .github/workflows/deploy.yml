@@ -21,6 +21,9 @@ jobs:
         cd /home/grusite/repo/movies-telegram-bot
         git log -1
         ls -l
+        whoami
+        pwd
+        alias nrd
         docker compose up --build -d
         docker image prune -f
         docker container prune -f
