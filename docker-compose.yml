@@ -1,6 +1,7 @@
 services:
   media-bot:
     build: .
+    container_name: media-bot
     ports:
       - "3200:3000"
     env_file:
