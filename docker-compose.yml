@@ -5,4 +5,15 @@ services:
       - "3200:3000"
     env_file:
       - .env
+    networks:
+      - loki
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: always
+
+networks:
+  loki:
+    external: true
