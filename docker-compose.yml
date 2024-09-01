@@ -9,10 +9,12 @@ services:
     networks:
       - monitoring_loki
     logging:
-      driver: "json-file"
+      driver: loki
       options:
-        max-size: "10m"
-        max-file: "3"
+        loki-url: "http://loki:3100/loki/api/v1/push"
+        loki-batch-size: "400"
+        loki-batch-wait: "1s"
+        loki-min-level: "info"
     restart: always
 
 networks:
