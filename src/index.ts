@@ -19,7 +19,7 @@ app.get('/', (_req, res) => {
 })
 
 app.get('/health', (_req, res) => {
-  res.status(200).send('¡Más sano que una lechuga en un gimnasio! 🥬💪')
+  res.status(200).send('¡Eso está más sano que una lechuga en un gimnasio! 🥬💪')
 })
 
 app.post('/send-announcement', async (req, res) => {
