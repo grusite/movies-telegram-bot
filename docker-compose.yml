@@ -1,6 +1,6 @@
 services:
   media-bot:
-    build: .
+    image: ghcr.io/${GITHUB_REPOSITORY}:latest
     container_name: media-bot
     ports:
       - "3200:3000"

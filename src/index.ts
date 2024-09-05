@@ -15,11 +15,11 @@ const port = process.env.PORT || 3000
 app.use(express.json());
 
 app.get('/', (_req, res) => {
-  res.status(200).send('Monstruooo! Esto está funcionando de vicio')
+  res.status(200).send('¡Ostras, pedrusco! ¡La máquina está viva! 🤖💃')
 })
 
 app.get('/health', (_req, res) => {
-  res.status(200).send('Monstruooo! Que todo ha ido bien ❤️')
+  res.status(200).send('¡Más sano que una lechuga en un gimnasio! 🥬💪')
 })
 
 app.post('/send-announcement', async (req, res) => {

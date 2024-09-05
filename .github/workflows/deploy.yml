@@ -1,20 +1,48 @@
-name: Deploy to JorgasServer
+name: Build, Push, and Deploy
 
 on:
   push:
     branches:
       - main
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
   deploy:
+    needs: build-and-push
     runs-on: self-hosted
 
     steps:
-    - name: Pull latest code, Build and Deploy
+    - name: Pull and Deploy
       run: |
         cd /home/grusite/repo/movies-telegram-bot
-        git pull origin main
-        echo "Running on $(hostname) as $(whoami)"
-        docker compose up --build -d
+        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        docker compose up -d
         docker image prune -f
         docker container prune -f
