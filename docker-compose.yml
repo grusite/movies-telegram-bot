@@ -1,6 +1,6 @@
 services:
   media-bot:
-    image: ghcr.io/${GITHUB_REPOSITORY}:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:grusite/movies-telegram-bot}:latest
     container_name: media-bot
     ports:
       - "3200:3000"
