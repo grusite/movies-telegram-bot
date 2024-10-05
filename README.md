@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains a Node.js application for a Telegram Bot designed to enhance the experience of a NAS chat group by integrating with Overseerr and Tautulli. It notifies users about new media availability, transcoding activities, and the completion of TV series seasons.
+This repository contains a Node.js application for a Telegram Bot designed to enhance the experience of a NAS chat group by integrating with Overseerr and Tautulli. It notifies users about new media availability, transcoding activities, and the completion of TV series seasons. 
 
 ## Requirements
 
