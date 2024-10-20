@@ -313,7 +313,9 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       if (credits && credits.cast && credits.cast.length ) {
         caption += `<strong>Reparto: </strong>`;
         for(const [index, cast] of credits.cast.entries()) {
-          caption += `<a href="${cast.profile_path ?? '#'}">${cast?.name}</a> (${cast?.character})`;
+          caption += `<a href="${cast.profile_path ?? '#'}">${cast?.name}</a> (${
+            cast?.character?.length > 20 ? cast?.character.slice(0, 20) + '[...]' : cast?.character
+          })`
           if(index === 2) {
             caption += '...';
             break;
@@ -326,11 +328,11 @@ export async function sendMessageFromOverseerrWebhook(chatId: string, overseerrP
       caption += `<strong>${tmdbInfo.title?.tagline}</strong>\n`
       if(tmdbInfo.plot) {
         caption += `${
-          tmdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 425) + '[...]' : tmdbInfo.plot
+          tmdbInfo.plot.length > 430 ? tmdbInfo.plot.slice(0, 430) + '[...]' : tmdbInfo.plot
         }\n`
       } else if(imdbInfo && imdbInfo.plot) {
         caption += `${
-          imdbInfo.plot.length > 500 ? tmdbInfo.plot.slice(0, 425) + '[...]' : imdbInfo.plot
+          imdbInfo.plot.length > 430 ? tmdbInfo.plot.slice(0, 430) + '[...]' : imdbInfo.plot
         }\n`
       } else {
         caption += `${message}\n`
