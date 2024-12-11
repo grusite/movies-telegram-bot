@@ -93,6 +93,17 @@ app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
   logger.info('/webhook/tautulli-transcoding-notification')
   consoleLogger.tautulliTranscoding('Received webhook from Tautulli Transcoding Notification', body)
 
+  if (body.server === 'cerveperros' && body.user === 'grusite') {
+    logger.info('Grusite is transcoding, skipping')
+    return res.status(200).json({
+      message: 'Telegram message successfully sent',
+      chatId: body.server === 'cerveperros' ? process.env.TELEGRAM_CVP_TRANSCODING_CHAT_ID! : process.env.TELEGRAM_SKYLATE_TRANSCODING_CHAT_ID!,
+      title: body.title,
+      user: body.user,
+      error: null,
+    })
+  }
+
   const chatIdByServer = {
     cerveperros: process.env.TELEGRAM_CVP_TRANSCODING_CHAT_ID!,
     skylate: process.env.TELEGRAM_SKYLATE_TRANSCODING_CHAT_ID!,
