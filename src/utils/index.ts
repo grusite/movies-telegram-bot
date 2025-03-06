@@ -11,12 +11,12 @@ export function extractMediaInfoFromOverseerBot(messageText: string) {
 
   if (match) {
     return {
-      type: match[1].trim(),
-      title: match[2].trim(),
+      type: match[1]?.trim(),
+      title: match[2]?.trim(),
       year: +match[3],
-      plot: match[4].trim(),
-      requestedBy: match[5].trim(),
-      requestStatus: match[6].trim(),
+      plot: match[4]?.trim(),
+      requestedBy: match[5]?.trim(),
+      requestStatus: match[6]?.trim(),
       requestedSeasons: match[7] ? match[7].trim() : undefined,
     }
   }
@@ -35,7 +35,7 @@ export function extractMediaInfoFromOverseerWebhook(subject: string) {
   
   if (match) {
     return {
-      title: match[1].trim(),
+      title: match[1]?.trim(),
       year: +match[2],
     }
   }
