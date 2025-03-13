@@ -136,45 +136,45 @@ app.post('/webhook/tautulli-transcoding-notification', async (req, res) => {
   }
 });
 
-// app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
-//   const body: TautulliLastEpisodeNotificationPayload = req.body
-//   logger.info('/webhook/tautulli-last-episode-notification')
-//   consoleLogger.tuautlliLastEpisode(
-//     'Received webhook from Tautulli Last Episode Notification',
-//     body
-//   )
+app.post('/webhook/tautulli-last-episode-notification', async (req, res) => {
+  const body: TautulliLastEpisodeNotificationPayload = req.body
+  logger.info('/webhook/tautulli-last-episode-notification')
+  consoleLogger.tuautlliLastEpisode(
+    'Received webhook from Tautulli Last Episode Notification',
+    body
+  )
 
-//   const chatIdByServer = {
-//     cerveperros: process.env.TELEGRAM_CVP_LAST_EPISODE_CHAT_ID!,
-//     skylate: process.env.TELEGRAM_SKYLATE_LAST_EPISODE_CHAT_ID!,
-//     default: process.env.TELEGRAM_TEST_LAST_EPISODE_CHAT_ID!,
-//   }
-//   const server: keyof typeof chatIdByServer = body.server ?? 'default'
-//   const chatId = chatIdByServer[server] || chatIdByServer['default']
+  const chatIdByServer = {
+    cerveperros: process.env.TELEGRAM_CVP_LAST_EPISODE_CHAT_ID!,
+    skylate: process.env.TELEGRAM_SKYLATE_LAST_EPISODE_CHAT_ID!,
+    default: process.env.TELEGRAM_TEST_LAST_EPISODE_CHAT_ID!,
+  }
+  const server: keyof typeof chatIdByServer = body.server ?? 'default'
+  const chatId = chatIdByServer[server] || chatIdByServer['default']
 
-//   try {
-//     await sendEndOfEpisodeMessageFromTautulliWebhook(
-//       chatId,
-//       body
-//     )
+  try {
+    await sendEndOfEpisodeMessageFromTautulliWebhook(
+      chatId,
+      body
+    )
 
-//     return res.status(200).json({
-//       message: 'Telegram message successfully sent',
-//       chatId,
-//       title: body.title,
-//       user: body.user,
-//       error: null,
-//     })
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: 'Telegram message not sent',
-//       chatId,
-//       title: body.title,
-//       user: body.user,
-//       error: (error as Error).message,
-//     })
-//   }
-// })
+    return res.status(200).json({
+      message: 'Telegram message successfully sent',
+      chatId,
+      title: body.title,
+      user: body.user,
+      error: null,
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Telegram message not sent',
+      chatId,
+      title: body.title,
+      user: body.user,
+      error: (error as Error).message,
+    })
+  }
+})
 
 app.listen(port, () => {
   logger.info('Server is running on %s', port)

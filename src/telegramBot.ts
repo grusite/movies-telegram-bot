@@ -635,7 +635,7 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
           'Guardarla, ya sea porque todavía no la he visto 👀 o porque me la quiero volver a ver en el futuro 🍿',
           'Me la pela, que decida el owner del servidor 🔨',
         ]
-        await bot.sendPoll(chatId, pollQuestion, pollOptions, { is_anonymous: false })
+        // await bot.sendPoll(chatId, pollQuestion, pollOptions, { is_anonymous: false })
       } else {
         throw new Error('No es el último episodio')
       }
