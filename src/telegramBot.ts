@@ -622,19 +622,21 @@ export async function sendEndOfEpisodeMessageFromTautulliWebhook(
         }
         /* END - DB INSERTION */
 
-        await bot.sendPhoto(chatId, tmdbInfo.coverImageUrl, {
-          caption,
-          parse_mode: 'HTML',
-        })
+        /* So far I've disabled the photo and poll because it was sending too many messages */
+        /* we agreed on disabling it but I kepts the DB insertion for now */
+        // await bot.sendPhoto(chatId, tmdbInfo.coverImageUrl, {
+        //   caption,
+        //   parse_mode: 'HTML',
+        // })
 
-        const pollQuestion = `¿Qué hacemos con la temporada ${serie_info.season_num} de ${
-          title.split('-')[0]
-        }ahora que ${user} se la ha zampado entera?`
-        const pollOptions = [
-          'Borrarla y hacer espacio para más series 🚀',
-          'Guardarla, ya sea porque todavía no la he visto 👀 o porque me la quiero volver a ver en el futuro 🍿',
-          'Me la pela, que decida el owner del servidor 🔨',
-        ]
+        // const pollQuestion = `¿Qué hacemos con la temporada ${serie_info.season_num} de ${
+        //   title.split('-')[0]
+        // }ahora que ${user} se la ha zampado entera?`
+        // const pollOptions = [
+        //   'Borrarla y hacer espacio para más series 🚀',
+        //   'Guardarla, ya sea porque todavía no la he visto 👀 o porque me la quiero volver a ver en el futuro 🍿',
+        //   'Me la pela, que decida el owner del servidor 🔨',
+        // ]
         // await bot.sendPoll(chatId, pollQuestion, pollOptions, { is_anonymous: false })
       } else {
         throw new Error('No es el último episodio')
