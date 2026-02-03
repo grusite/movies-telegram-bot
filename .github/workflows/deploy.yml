@@ -33,18 +33,3 @@ jobs:
         context: .
         push: true
         tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-  deploy:
-    needs: build-and-push
-    runs-on: self-hosted
-
-    steps:
-    - name: Pull latest code, Build and Deploy
-      run: |
-        cd /home/grusite/repo/movies-telegram-bot
-        git pull origin main
-        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-        docker compose down
-        docker compose up -d --force-recreate
-        docker image prune -f
-        docker container prune -f
